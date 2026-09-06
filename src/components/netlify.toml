@@ -1,0 +1,32 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# ============================================================
+# NAPR-ის რუკების proxy
+#
+# საჯარო რეესტრის სერვისები მხოლოდ http-ზე მუშაობს, საიტი კი https-ია.
+# ბრაუზერი https გვერდზე http-სურათებს ბლოკავს (mixed content).
+# ამიტომ ტაილებს Netlify-ს გავატარებთ — ბრაუზერისთვის ისინი
+# იმავე დომენიდან, https-ით მოდის.
+#
+# ⚠️ ეს წესები SPA-ს catch-all-ზე ზემოთ უნდა იყოს.
+# ============================================================
+
+[[redirects]]
+  from = "/napr-tiles/*"
+  to = "http://mp1.napr.gov.ge/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/napr-wms/*"
+  to = "http://gpv0.napr.gov.ge/:splat"
+  status = 200
+  force = true
+
+# SPA — ყოველთვის ბოლოს
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
