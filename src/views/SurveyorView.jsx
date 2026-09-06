@@ -3,6 +3,9 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Pill, Row, Empty, Stars, Sheet, Spinner } from "../components/UI";
 import Chat from "../components/Chat";
+import MapView from "../components/MapView";
+import { DeliverablesUpload } from "../components/Deliverables";
+import { PayPill } from "../components/Payment";
 import { money, m2, FLOW, STATUS, REGIONS, ALL_SERVICES } from "../lib/constants";
 
 export default function SurveyorView({ toast }) {
@@ -56,8 +59,8 @@ export default function SurveyorView({ toast }) {
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, gap: 6 }}>
           <span className="mono muted" style={{ fontSize: 11 }}>#{o.num}</span>
           {o.status === "open"
-            ? (b ? <span className="pill s-selected">✓ გაგზავნილია {money(b.price)}</span>
-                 : <span className="pill s-open">○ ახალი</span>)
+            ? (b ? <span className="pill s-selected">{money(b.price)} გაგზავნილია</span>
+                 : <span className="pill s-open">ახალი</span>)
             : <Pill s={o.status} />}
         </div>
         <div style={{ fontWeight: 700 }}>{o.service}</div>
@@ -80,9 +83,9 @@ export default function SurveyorView({ toast }) {
           )}
           <div className="card tick" style={{ marginBottom: 12 }}>
             <div className="grid3">
-              <div className="stat"><div className="n mono" style={{ color: "var(--amber)" }}>{feed?.length ?? "—"}</div><div className="t">ახალი შეკვეთა</div></div>
+              <div className="stat"><div className="n mono" style={{ color: "var(--safety)" }}>{feed?.length ?? "—"}</div><div className="t">ახალი შეკვეთა</div></div>
               <div className="stat"><div className="n mono">{myBids.length}</div><div className="t">გაგზავნილი</div></div>
-              <div className="stat"><div className="n mono" style={{ color: "var(--moss)" }}>{myOrders.length}</div><div className="t">მოგებული</div></div>
+              <div className="stat"><div className="n mono" style={{ color: "var(--field)" }}>{myOrders.length}</div><div className="t">მოგებული</div></div>
             </div>
             <div className="hl" />
             <div className="grid3">
@@ -166,8 +169,8 @@ function ProfileEditor({ profile, stats, onSave, toast }) {
         <div style={{ fontWeight: 700, fontSize: 16 }}>
           {profile.full_name}{" "}
           {profile.verified
-            ? <span style={{ color: "var(--moss)", fontSize: 13 }}>✓ Verified</span>
-            : <span style={{ color: "var(--amber)", fontSize: 12 }}>⏳ ვერიფიკაცია მოლოდინში</span>}
+            ? <span style={{ color: "var(--field)", fontSize: 13 }}>✓ Verified</span>
+            : <span style={{ color: "var(--safety)", fontSize: 12 }}>⏳ ვერიფიკაცია მოლოდინში</span>}
         </div>
         <div className="muted" style={{ fontSize: 12.5 }}>
           {profile.user_type === "company" ? "🏢 კომპანია" : "📐 გეოდეზისტი"} · {profile.experience} წელი · {profile.phone}
@@ -274,6 +277,13 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
             <Row l="დამკვეთი" v={client?.full_name || "—"} />
           </div>
 
+          {(o.lat || o.polygon) && (
+            <div style={{ marginBottom: 10 }}>
+              <div className="lbl" style={{ marginBottom: 4 }}>🗺️ სამუშაოს ადგილი</div>
+              <MapView lat={o.lat} lng={o.lng} polygon={o.polygon} height={220} />
+            </div>
+          )}
+
           {o.description && (
             <div className="card" style={{ marginBottom: 10, fontSize: 13.5, fontStyle: "italic" }}>
               „{o.description}"
@@ -283,8 +293,8 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
           {(o.photos || []).length > 0 && (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 5, marginBottom: 10 }}>
               {o.photos.map((p, i) => (
-                <div key={i} style={{ aspectRatio: "1", background: "#DDE1D5", border: "1px solid var(--line)",
-                  fontSize: 9, padding: 3, overflow: "hidden", color: "var(--slate)" }}>📷 {p}</div>
+                <div key={i} style={{ aspectRatio: "1", background: "#C4C7C0", border: "1px solid var(--black)",
+                  fontSize: 9, padding: 3, overflow: "hidden", color: "var(--graphite)" }}>📷 {p}</div>
               ))}
             </div>
           )}
@@ -312,13 +322,13 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                   მათ ფასებს ვერ ხედავ — და ვერც ისინი ხედავენ შენსას.
                   შეაფასე საკუთარი გამოცდილებით.
                 </div>
-                <button className="btn" onClick={() => setForm(true)}>💰 შეთავაზების გაგზავნა</button>
+                <button className="btn btn-go" onClick={() => setForm(true)}>ფასის შეთავაზება</button>
               </>
             )
           )}
 
           {o.status !== "open" && !isMine && (
-            <div className="card" style={{ color: "var(--rust)", fontSize: 13 }}>
+            <div className="card" style={{ color: "var(--survey)", fontSize: 13 }}>
               დამკვეთმა სხვა ამზომველი აირჩია.
             </div>
           )}
@@ -328,6 +338,16 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
               <div className="card tick" style={{ marginBottom: 10 }}>
                 <Row l="შეთანხმებული ფასი" v={money(myBid.price)} mono />
                 <Row l="ვადა" v={`${myBid.days} დღე`} mono />
+                <div className="hl" />
+                <div className="row" style={{ alignItems: "center" }}>
+                  <span className="muted">გადახდა</span>
+                  <PayPill s={o.payment_status || "unpaid"} />
+                </div>
+              </div>
+
+              <div className="lbl" style={{ marginBottom: 4 }}>📁 ნახაზის მიწოდება</div>
+              <div className="card" style={{ marginBottom: 12 }}>
+                <DeliverablesUpload orderId={orderId} meId={me.id} toast={toast} />
               </div>
 
               {FLOW.indexOf(o.status) < FLOW.indexOf("done") && (
@@ -336,8 +356,8 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                 </button>
               )}
               {o.status === "done" && (
-                <div className="card" style={{ marginBottom: 10, fontSize: 13, color: "var(--moss)" }}>
-                  ● დასრულებულია — ველოდებით დამკვეთის შეფასებას
+                <div className="card" style={{ marginBottom: 10, fontSize: 13, color: "var(--field)" }}>
+                  დასრულებულია — ველოდებით დამკვეთის შეფასებას
                 </div>
               )}
 

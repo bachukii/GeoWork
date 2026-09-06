@@ -1,96 +1,255 @@
+/* ============================================================
+   GeoBid — ვიზუალური სისტემა
+   წყარო: ამზომველის საველე აღჭურვილობა — hi-vis ჟილეტი,
+   სახიფათო ლენტი, ბეტონი, სანიველირო ნიშნული.
+   ============================================================ */
+
 :root {
-  --ink:#182633; --blue:#2E5C86; --paper:#ECEEE8; --raised:#F8F8F4;
-  --line:#C6C9BC; --amber:#C7801B; --moss:#3F6E55; --rust:#B3452C;
-  --slate:#66727F; --violet:#6A4C93;
+  --concrete:  #D6D8D2;   /* ცივი ბეტონი — ფონი */
+  --slab:      #EDEEE9;   /* ამაღლებული ზედაპირი */
+  --black:     #0F1113;   /* სტრუქტურა, საზღვრები, სათაურები */
+  --graphite:  #3A3F44;   /* მეორეული ტექსტი */
+  --hivis:     #E4FF1A;   /* სასიგნალო ყვითელი — ერთადერთი ყვირილი */
+  --safety:    #FF5C1A;   /* უსაფრთხოების ნარინჯისფერი */
+  --survey:    #D62828;   /* საკადასტრო წითელი — შეცდომა, გაუქმება */
+  --field:     #1F7A4C;   /* საველე მწვანე — დასრულებული */
+  --marker:    #2B5FAD;   /* ნიშნულის ლურჯი — მიმდინარე */
+
+  --edge: 2px solid var(--black);
+  --edge-thin: 1px solid var(--black);
 }
+
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Georgian", sans-serif;
-  background: #DDDFD8;
-  color: var(--ink);
+  font-family: "Noto Sans Georgian", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--graphite);
+  color: var(--black);
   -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+  line-height: 1.45;
 }
+
 .app {
-  background: var(--paper); max-width: 480px; margin: 0 auto;
-  min-height: 100%; position: relative; padding-bottom: 78px;
-}
-.mono { font-family: "SF Mono","JetBrains Mono",ui-monospace,Menlo,monospace; }
-.muted { color: var(--slate); }
-
-.hdr { background: var(--ink); color: var(--raised); padding: 14px 16px 12px; position: relative; }
-.hdr::after {
-  content:""; position:absolute; left:0; right:0; bottom:0; height:3px;
-  background: repeating-linear-gradient(90deg, var(--amber) 0 10px, transparent 10px 20px);
+  background: var(--concrete);
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100%;
+  position: relative;
+  padding-bottom: 84px;
 }
 
-.card { background: var(--raised); border: 1px solid var(--line); padding: 13px; position: relative; }
-.tick::before { content:""; position:absolute; top:-1px; left:-1px; width:8px; height:8px;
-  border-top:2px solid var(--ink); border-left:2px solid var(--ink); }
-.tick::after { content:""; position:absolute; bottom:-1px; right:-1px; width:8px; height:8px;
-  border-bottom:2px solid var(--ink); border-right:2px solid var(--ink); }
+.mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-weight: 500; }
+.muted { color: var(--graphite); }
 
-.pill { display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:2px 7px;
-  border:1px solid currentColor; font-family:"SF Mono",ui-monospace,monospace; white-space:nowrap; }
-.s-open{color:var(--amber)} .s-selected{color:var(--blue)} .s-scheduled{color:var(--amber)}
-.s-inprogress{color:var(--violet)} .s-processing{color:var(--blue)} .s-done{color:var(--moss)}
-.s-rated{color:var(--moss)} .s-cancel{color:var(--rust)}
+/* ---------- სახიფათო ლენტი: ხელმოწერის მოტივი ---------- */
+.hazard {
+  height: 7px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--hivis) 0 9px,
+    var(--black) 9px 18px
+  );
+}
 
-.nav { position:fixed; bottom:0; left:0; right:0; max-width:480px; margin:0 auto;
-  background:var(--raised); border-top:1px solid var(--line); display:flex; z-index:20; }
-.navbtn { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
-  font-size:10.5px; padding:8px 2px; color:var(--slate); background:none; border:none; cursor:pointer; }
-.navbtn.on { color:var(--ink); font-weight:600; }
-.navbtn.on .ic { color:var(--amber); }
+/* ---------- სათაური ---------- */
+.hdr {
+  background: var(--black);
+  color: var(--concrete);
+  padding: 16px 16px 14px;
+}
+.hdr h1 {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.hdr .sub { font-size: 11.5px; color: #9AA1A7; margin-top: 3px; }
+.hdr .who { font-size: 11.5px; text-align: right; }
+.hdr .who b { color: var(--hivis); font-weight: 800; }
 
-.btn { background:var(--ink); color:var(--raised); padding:11px 16px; font-size:14.5px;
-  font-weight:600; border:none; width:100%; cursor:pointer; }
-.btn:disabled { opacity:.45; cursor:not-allowed; }
-.btn2 { background:transparent; color:var(--ink); padding:10px 16px; font-size:14px;
-  border:1px solid var(--ink); width:100%; cursor:pointer; }
-.btn-sm { padding:6px 10px; font-size:12.5px; width:auto; }
-.btn-danger { color:var(--rust); border-color:var(--rust); }
+/* ---------- ბლოკები ---------- */
+.card {
+  background: var(--slab);
+  border: var(--edge);
+  padding: 13px;
+  position: relative;
+}
+/* გამორჩეული ბლოკი — ყვითელი ზოლი მარცხნივ */
+.tick { border-left-width: 6px; border-left-color: var(--hivis); }
 
+/* ---------- სტატუსის ნიშნები ---------- */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 8px;
+  border: var(--edge-thin);
+  background: var(--slab);
+  white-space: nowrap;
+}
+.s-open       { background: var(--hivis); }
+.s-selected   { background: var(--marker); color: #fff; border-color: var(--marker); }
+.s-scheduled  { background: var(--safety); color: #fff; border-color: var(--safety); }
+.s-inprogress { background: var(--marker); color: #fff; border-color: var(--marker); }
+.s-processing { background: var(--slab); }
+.s-done       { background: var(--field); color: #fff; border-color: var(--field); }
+.s-rated      { background: var(--field); color: #fff; border-color: var(--field); }
+.s-cancel     { background: var(--survey); color: #fff; border-color: var(--survey); }
+
+/* ---------- ღილაკები ---------- */
+.btn {
+  background: var(--black); color: var(--concrete);
+  padding: 13px 16px;
+  font-family: inherit; font-size: 15px; font-weight: 800;
+  border: var(--edge); width: 100%; cursor: pointer;
+}
+.btn:active { background: var(--hivis); color: var(--black); }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* მთავარი მოქმედება — ყვითელი */
+.btn-go { background: var(--hivis); color: var(--black); }
+.btn-go:active { background: var(--black); color: var(--hivis); }
+
+.btn2 {
+  background: transparent; color: var(--black);
+  padding: 11px 16px; font-family: inherit; font-size: 14px; font-weight: 700;
+  border: var(--edge); width: 100%; cursor: pointer;
+}
+.btn2:active { background: var(--black); color: var(--concrete); }
+.btn-sm { padding: 7px 11px; font-size: 12.5px; width: auto; }
+.btn-danger { color: var(--survey); border-color: var(--survey); }
+.btn-danger:active { background: var(--survey); color: #fff; }
+
+/* ---------- ველები ---------- */
 .inp, textarea.inp, select.inp {
-  width:100%; padding:9px 10px; font-size:16px; border:1px solid var(--line);
-  background:var(--raised); color:var(--ink); margin-top:4px; font-family:inherit;
+  width: 100%; padding: 11px 12px;
+  font-family: inherit; font-size: 16px;
+  border: var(--edge); background: var(--slab); color: var(--black);
+  margin-top: 5px;
 }
-.inp:focus { outline:2px solid var(--blue); outline-offset:-1px; }
-.lbl { font-size:12px; color:var(--slate); font-weight:600; }
+.inp:focus { outline: none; background: #fff; box-shadow: inset 0 0 0 3px var(--hivis); }
+.lbl {
+  font-size: 12px; font-weight: 800; color: var(--black);
+  display: block;
+}
 
-.chip { padding:8px 10px; border:1px solid var(--line); font-size:13px; background:var(--raised);
-  color:var(--ink); text-align:left; cursor:pointer; font-family:inherit; }
-.chip.on { border-color:var(--ink); background:var(--ink); color:var(--raised); }
-.chip-sm { padding:5px 9px; font-size:12px; }
+/* ---------- არჩევანი ---------- */
+.chip {
+  padding: 10px 12px; border: var(--edge-thin); font-family: inherit;
+  font-size: 13.5px; font-weight: 600;
+  background: var(--slab); color: var(--black); text-align: left; cursor: pointer;
+}
+.chip.on {
+  background: var(--black); color: var(--concrete);
+  border-color: var(--black);
+  box-shadow: inset 3px 0 0 var(--hivis);
+}
+.chip-sm { padding: 6px 10px; font-size: 12.5px; }
 
-.scrim { position:fixed; inset:0; background:rgba(24,38,51,.55); display:flex;
-  align-items:flex-end; z-index:50; }
-.sheet { background:var(--paper); width:100%; max-width:480px; margin:0 auto;
-  max-height:90vh; overflow-y:auto; border-top:3px solid var(--amber); padding:16px 16px 26px; }
+/* ---------- ქვედა ნავიგაცია ---------- */
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  max-width: 480px; margin: 0 auto;
+  background: var(--black); display: flex; z-index: 20;
+  border-top: 3px solid var(--hivis);
+}
+.navbtn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-family: inherit; font-size: 10px; font-weight: 700;
+  padding: 10px 2px; color: #8B9298; background: none; border: none; cursor: pointer;
+}
+.navbtn .ic { font-size: 17px; line-height: 1; }
+.navbtn.on { color: var(--hivis); }
 
-.row { display:flex; justify-content:space-between; font-size:13.5px; gap:10px; padding:2px 0; }
-.hl { border-top:1px solid var(--line); margin:8px 0; }
+/* ---------- სტატისტიკა ---------- */
+.stat { text-align: center; padding: 12px 4px; }
+.stat .n {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 30px; font-weight: 700; line-height: 1;
+  letter-spacing: -0.03em;
+}
+.stat .t {
+  font-size: 10.5px; font-weight: 700; color: var(--graphite);
+  margin-top: 5px;
+}
 
-.bubble { max-width:80%; padding:8px 11px; font-size:13.5px; margin-bottom:6px; }
-.me { background:var(--ink); color:var(--raised); margin-left:auto; }
-.them { background:var(--raised); border:1px solid var(--line); }
+/* ---------- სტრიქონები ---------- */
+.row {
+  display: flex; justify-content: space-between; gap: 10px;
+  font-size: 13.5px; padding: 4px 0;
+}
+.hl { border-top: var(--edge-thin); margin: 10px 0; }
 
-.stat { text-align:center; padding:10px 4px; }
-.stat .n { font-size:22px; font-weight:700; }
-.stat .t { font-size:11px; color:var(--slate); }
-.star { color:var(--amber); }
+/* ---------- ჩატი ---------- */
+.bubble { max-width: 80%; padding: 9px 12px; font-size: 14px; margin-bottom: 7px; border: var(--edge-thin); }
+.me { background: var(--black); color: var(--concrete); margin-left: auto; }
+.them { background: var(--slab); }
 
-.toast { position:fixed; top:12px; left:50%; transform:translateX(-50%);
-  background:var(--ink); color:var(--raised); padding:8px 14px; font-size:13px;
-  z-index:99; border-left:3px solid var(--amber); max-width:90%; }
+/* ---------- ფურცელი ---------- */
+.scrim {
+  position: fixed; inset: 0; background: rgba(15,17,19,.72);
+  display: flex; align-items: flex-end; z-index: 50;
+}
+.sheet {
+  background: var(--concrete); width: 100%; max-width: 480px; margin: 0 auto;
+  max-height: 90vh; overflow-y: auto; padding: 0 0 26px;
+  border-top: 3px solid var(--black);
+}
+.sheet-inner { padding: 0 16px; }
+.sheet-hdr {
+  background: var(--black); color: var(--concrete);
+  padding: 14px 16px; margin-bottom: 14px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sheet-hdr .t { font-size: 18px; font-weight: 900; letter-spacing: -0.01em; }
+.sheet-hdr button { background: none; border: none; color: var(--hivis); font-size: 22px; cursor: pointer; padding: 0; }
 
-.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; }
-.wrap { display:flex; flex-wrap:wrap; gap:5px; }
-.col { display:flex; flex-direction:column; gap:8px; }
-.center { text-align:center; padding:32px 16px; color:var(--slate); }
+/* ---------- შეტყობინებები ---------- */
+.toast {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+  background: var(--hivis); color: var(--black);
+  border: var(--edge);
+  padding: 10px 16px; font-size: 13.5px; font-weight: 700;
+  z-index: 99; max-width: 90%;
+}
+.err  { background: var(--survey); color: #fff; border: var(--edge); font-size: 13px; font-weight: 600; padding: 10px 12px; margin-bottom: 10px; }
+.ok   { background: var(--field);  color: #fff; border: var(--edge); font-size: 13px; font-weight: 600; padding: 10px 12px; margin-bottom: 10px; }
+.warn { background: var(--hivis); color: var(--black); border: var(--edge); font-size: 12.5px; font-weight: 600; padding: 10px 12px; }
 
-.err { background:var(--rust); color:#fff; font-size:12.5px; padding:8px 12px; margin-bottom:10px; }
-.ok  { background:var(--moss); color:#fff; font-size:12.5px; padding:8px 12px; margin-bottom:10px; }
-.warn{ background:#F3E5C8; border:1px solid var(--amber); color:#6B4A10;
-  font-size:12.5px; padding:8px 12px; }
+/* ---------- დამხმარეები ---------- */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.wrap  { display: flex; flex-wrap: wrap; gap: 6px; }
+.col   { display: flex; flex-direction: column; gap: 9px; }
+.center { text-align: center; padding: 34px 16px; color: var(--graphite); }
+.star { color: var(--safety); letter-spacing: -1px; }
+
+/* ---------- საწყისი ეკრანი ---------- */
+.gate-hero {
+  background: var(--black); color: var(--concrete);
+  padding: 34px 20px 30px;
+}
+.gate-hero .mark {
+  font-size: 46px; font-weight: 900; line-height: .92;
+  letter-spacing: -0.035em; margin: 0;
+}
+.gate-hero .mark span { color: var(--hivis); }
+.gate-hero .lede {
+  font-size: 14.5px; color: #A8AFB5; margin-top: 12px; max-width: 34ch;
+}
+.role-card { background: var(--slab); border: var(--edge); padding: 16px; }
+.role-card .glyph { font-size: 30px; line-height: 1; }
+.role-card h2 { margin: 8px 0 0; font-size: 19px; font-weight: 900; letter-spacing: -0.01em; }
+.role-card p { margin: 6px 0 14px; font-size: 13px; color: var(--graphite); }
+
+/* ფოკუსი კლავიატურისთვის */
+:focus-visible { outline: 3px solid var(--safety); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* Leaflet — საზღვრები ჩვენს სტილში */
+.leaflet-container { border: var(--edge); font-family: inherit; }

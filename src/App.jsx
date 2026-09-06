@@ -58,24 +58,22 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
   }
 
   const roleLabel =
-    profile.role === "client" ? "👤 დამკვეთი" :
-    profile.role === "surveyor" ? "📐 ამზომველი" : "🛡 ადმინისტრატორი";
+    profile.role === "client" ? "დამკვეთის კაბინეტი" :
+    profile.role === "surveyor" ? "ამზომველის კაბინეტი" : "ადმინისტრირება";
 
   return (
     <div className="app">
       {toastMsg && <div className="toast">{toastMsg}</div>}
       <div className="hdr">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
           <div>
-            <div style={{ fontSize: 17, fontWeight: 700, letterSpacing: .3 }}>GeoBid</div>
-            <div style={{ fontSize: 11, opacity: .7 }}>ამზომველის გამოძახების პლატფორმა</div>
+            <h1>GeoBid</h1>
+            <div className="sub">{roleLabel}</div>
           </div>
-          <div style={{ fontSize: 11.5, opacity: .85, textAlign: "right" }}>
-            <div>{roleLabel}</div>
-            <div style={{ opacity: .7 }}>{profile.full_name}</div>
-          </div>
+          <div className="who"><b>{profile.full_name}</b></div>
         </div>
       </div>
+      <div className="hazard" />
 
       {profile.role === "client" && <ClientView toast={toast} />}
       {profile.role === "surveyor" && <SurveyorView toast={toast} />}

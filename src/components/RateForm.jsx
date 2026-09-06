@@ -22,7 +22,7 @@ export default function RateForm({ who, onSubmit, busy }) {
             {[1, 2, 3, 4, 5].map((n) => (
               <button key={n} onClick={() => setV((x) => ({ ...x, [k]: n }))}
                 style={{ background: "none", border: "none", fontSize: 19, cursor: "pointer",
-                  color: n <= v[k] ? "var(--amber)" : "var(--line)" }}>★</button>
+                  color: n <= v[k] ? "var(--safety)" : "var(--black)" }}>★</button>
             ))}
           </span>
         </div>

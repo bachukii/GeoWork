@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Pill, Row, Empty, Stars, Spinner } from "../components/UI";
 import { money, dateOf } from "../lib/constants";
+import { PaymentsAdmin } from "../components/Payment";
 
 export default function AdminView({ toast }) {
   const { signOut } = useAuth();
@@ -70,7 +71,7 @@ export default function AdminView({ toast }) {
             <div className="grid3">
               <div className="stat"><div className="n mono">{d.bids.length}</div><div className="t">შეთავაზება</div></div>
               <div className="stat"><div className="n mono">{d.orders.filter((o) => o.status === "open").length}</div><div className="t">ღია</div></div>
-              <div className="stat"><div className="n mono" style={{ color: "var(--rust)" }}>
+              <div className="stat"><div className="n mono" style={{ color: "var(--survey)" }}>
                 {d.complaints.filter((c) => c.status === "open").length}</div><div className="t">საჩივარი</div></div>
             </div>
             <div className="hl" />
@@ -97,7 +98,7 @@ export default function AdminView({ toast }) {
                   </div>
                 </div>
                 <button className="btn btn-sm"
-                  style={{ background: p.verified ? "var(--moss)" : "var(--amber)", whiteSpace: "nowrap" }}
+                  style={{ background: p.verified ? "var(--field)" : "var(--safety)", whiteSpace: "nowrap" }}
                   onClick={() => toggleVerify(p)}>{p.verified ? "✓ Verified" : "ვერიფიკაცია"}</button>
               </div>
             );
@@ -136,6 +137,13 @@ export default function AdminView({ toast }) {
         </div>
       )}
 
+      {tab === "payments" && (
+        <div style={{ padding: 16 }}>
+          <div className="lbl" style={{ marginBottom: 6 }}>გადახდების დადასტურება</div>
+          <PaymentsAdmin toast={toast} />
+        </div>
+      )}
+
       {tab === "complaints" && (
         <div style={{ padding: 16 }}>
           <div className="lbl" style={{ marginBottom: 6 }}>საჩივრები</div>
@@ -165,7 +173,7 @@ export default function AdminView({ toast }) {
           {d.ratings.length === 0 ? <Empty t="შეფასება არ არის" /> : d.ratings.map((r) => (
             <div key={r.id} className="card row" style={{ marginBottom: 6, fontSize: 13, alignItems: "center" }}>
               <span><Stars v={r.overall} /> → {nameOf(r.to_id)}</span>
-              <button style={{ background: "none", border: "none", color: "var(--rust)", cursor: "pointer" }}
+              <button style={{ background: "none", border: "none", color: "var(--survey)", cursor: "pointer" }}
                 onClick={() => delRating(r)}>წაშლა</button>
             </div>
           ))}
@@ -176,6 +184,7 @@ export default function AdminView({ toast }) {
         <button className={`navbtn ${tab === "stats" ? "on" : ""}`} onClick={() => setTab("stats")}><span className="ic">📊</span>სტატისტიკა</button>
         <button className={`navbtn ${tab === "users" ? "on" : ""}`} onClick={() => setTab("users")}><span className="ic">👥</span>მომხმარებლები</button>
         <button className={`navbtn ${tab === "orders" ? "on" : ""}`} onClick={() => setTab("orders")}><span className="ic">📋</span>შეკვეთები</button>
+        <button className={`navbtn ${tab === "payments" ? "on" : ""}`} onClick={() => setTab("payments")}><span className="ic">💳</span>გადახდები</button>
         <button className={`navbtn ${tab === "complaints" ? "on" : ""}`} onClick={() => setTab("complaints")}><span className="ic">🚨</span>საჩივრები</button>
       </div>
     </>

@@ -48,35 +48,40 @@ function translate(e) {
 // ---------------- LANDING ----------------
 function Landing({ onPick }) {
   return (
-    <div style={{ padding: 22 }}>
-      <div style={{ textAlign: "center", marginBottom: 26, marginTop: 20 }}>
-        <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: .5 }}>GeoBid</div>
-        <div className="muted" style={{ fontSize: 13.5, marginTop: 4 }}>
-          ამზომველის გამოძახების პლატფორმა
-        </div>
+    <div>
+      <div className="gate-hero">
+        <h1 className="mark">ამზომველს<br />ეძებ?<br /><span>დაელოდე<br />ფასებს.</span></h1>
+        <p className="lede">
+          აქვეყნებ სამუშაოს. ამზომველები გიგზავნიან ფასს ერთმანეთისგან დამოუკიდებლად —
+          ვერავინ ხედავს ვინ რამდენი დაწერა. ირჩევ შენ.
+        </p>
       </div>
+      <div className="hazard" />
 
-      <div className="card tick" style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 26, marginBottom: 6 }}>👤</div>
-        <div style={{ fontWeight: 700, fontSize: 16 }}>დამკვეთი ვარ</div>
-        <div className="muted" style={{ fontSize: 12.5, margin: "6px 0 12px" }}>
-          მჭირდება საკადასტრო, ტოპოგრაფიული ან შიდა აზომვა. გამოვაქვეყნებ შეკვეთას
-          და ამზომველები თვითონ მომწერენ ფასს.
+      <div style={{ padding: 16 }}>
+        <div className="col">
+          <div className="role-card">
+            <div className="glyph">🏗</div>
+            <h2>დამკვეთი ვარ</h2>
+            <p>მჭირდება საკადასტრო, ტოპოგრაფიული ან შიდა აზომვა.</p>
+            <button className="btn btn-go" onClick={() => onPick("reg-client")}>
+              შეკვეთის განთავსება
+            </button>
+          </div>
+
+          <div className="role-card">
+            <div className="glyph">📐</div>
+            <h2>ამზომველი ვარ</h2>
+            <p>გეოდეზისტი ან კომპანია. ვიღებ შეკვეთებს ჩემს რეგიონში.</p>
+            <button className="btn" onClick={() => onPick("reg-surveyor")}>
+              ამზომველად რეგისტრაცია
+            </button>
+          </div>
         </div>
-        <button className="btn" onClick={() => onPick("reg-client")}>დამკვეთად რეგისტრაცია</button>
-      </div>
 
-      <div className="card tick" style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 26, marginBottom: 6 }}>📐</div>
-        <div style={{ fontWeight: 700, fontSize: 16 }}>ამზომველი ვარ</div>
-        <div className="muted" style={{ fontSize: 12.5, margin: "6px 0 12px" }}>
-          გეოდეზისტი ან გეოდეზიური კომპანია. ვნახავ ჩემი რეგიონის შეკვეთებს
-          და გავაგზავნი საკუთარ შეთავაზებას.
-        </div>
-        <button className="btn" onClick={() => onPick("reg-surveyor")}>ამზომველად რეგისტრაცია</button>
+        <div className="hl" style={{ margin: "18px 0" }} />
+        <button className="btn2" onClick={() => onPick("login")}>შესვლა</button>
       </div>
-
-      <button className="btn2" onClick={() => onPick("login")}>უკვე მაქვს ანგარიში — შესვლა</button>
     </div>
   );
 }
@@ -87,8 +92,8 @@ function Login({ onBack, onSubmit, busy, err }) {
   const [password, setPassword] = useState("");
   return (
     <div style={{ padding: 20 }}>
-      <button className="btn2 btn-sm" style={{ marginBottom: 16 }} onClick={onBack}>← უკან</button>
-      <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 14 }}>შესვლა</div>
+      <button className="btn2 btn-sm" style={{ marginBottom: 18 }} onClick={onBack}>← უკან</button>
+      <div style={{ fontSize: 26, fontWeight: 900, marginBottom: 16, letterSpacing: "-0.02em" }}>შესვლა</div>
       {err && <div className="err">{err}</div>}
       <div className="lbl">ელფოსტა</div>
       <input className="inp" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -96,7 +101,7 @@ function Login({ onBack, onSubmit, busy, err }) {
       <input className="inp" type="password" autoComplete="current-password" value={password}
         onChange={(e) => setPassword(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && email && password && onSubmit({ email, password })} />
-      <button className="btn" style={{ marginTop: 18 }} disabled={busy || !email || !password}
+      <button className="btn btn-go" style={{ marginTop: 20 }} disabled={busy || !email || !password}
         onClick={() => onSubmit({ email, password })}>
         {busy ? "შესვლა…" : "შესვლა"}
       </button>
@@ -128,8 +133,8 @@ function Register({ role, onBack, onSubmit, busy, err, info }) {
   return (
     <div style={{ padding: 20 }}>
       <button className="btn2 btn-sm" style={{ marginBottom: 16 }} onClick={onBack}>← უკან</button>
-      <div style={{ fontSize: 20, fontWeight: 700 }}>
-        {isSurveyor ? "ამზომველის რეგისტრაცია" : "დამკვეთის რეგისტრაცია"}
+      <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+        {isSurveyor ? "ამზომველის\nრეგისტრაცია" : "დამკვეთის\nრეგისტრაცია"}
       </div>
       {isSurveyor && <div className="muted" style={{ fontSize: 12.5, marginBottom: 14 }}>ნაბიჯი {step} / {steps}</div>}
       <div style={{ height: 10 }} />

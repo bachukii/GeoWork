@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Sheet, Row } from "./UI";
-import AreaDraw from "./AreaDraw";
+import MapPicker from "./MapPicker";
 import { SERVICE_GROUPS, REGIONS, DEADLINES, m2 } from "../lib/constants";
 import { lookupCadastral } from "../lib/cadastral";
 
@@ -12,6 +12,7 @@ export default function NewOrder({ onClose, onPublish, busy }) {
   const [code, setCode] = useState("");
   const [lookup, setLookup] = useState(undefined); // undefined = not searched
   const [manualArea, setManualArea] = useState(0);
+  const [geo, setGeo] = useState({ lat: null, lng: null, polygon: null });
   const [manualRegion, setManualRegion] = useState(REGIONS[0]);
   const [manualAddr, setManualAddr] = useState("");
   const [photos, setPhotos] = useState([]);
@@ -20,11 +21,14 @@ export default function NewOrder({ onClose, onPublish, busy }) {
   const [dlDate, setDlDate] = useState("");
   const fileRef = useRef();
 
-  const onArea = useCallback((a) => setManualArea(a), []);
+  const onGeo = useCallback((g) => {
+    setGeo(g);
+    if (g.area) setManualArea(g.area);
+  }, []);
 
   const canNext =
     step === 1 ? !!svc :
-    step === 2 ? (mode === "code" ? !!lookup : manualArea > 0) : true;
+    step === 2 ? (mode === "code" ? !!lookup : (geo.lat !== null || manualArea > 0)) : true;
 
   const region = mode === "code" ? lookup?.region : manualRegion;
   const place = mode === "code" ? lookup?.place : (manualAddr.trim() || manualRegion);
@@ -34,6 +38,7 @@ export default function NewOrder({ onClose, onPublish, busy }) {
     category: cat, service: svc, region, place,
     cadastral_code: mode === "code" ? code.trim() : null,
     area, area_source: mode === "code" ? "cadastral" : "manual",
+    lat: geo.lat, lng: geo.lng, polygon: geo.polygon,
     photos, description: desc.trim() || null,
     deadline: dl === "კონკრეტული თარიღი" ? (dlDate || dl) : dl,
   });
@@ -79,7 +84,7 @@ export default function NewOrder({ onClose, onPublish, busy }) {
                   onClick={() => setLookup(lookupCadastral(code))}>ძებნა</button>
               </div>
               {lookup === null && (
-                <div style={{ fontSize: 12, color: "var(--rust)", marginTop: 6 }}>
+                <div style={{ fontSize: 12, color: "var(--survey)", marginTop: 6 }}>
                   კოდი ვერ მოიძებნა. ფორმატი: XX.XX.XX.XXX ან XX.XX.XX.XXX.XXX
                 </div>
               )}
@@ -88,10 +93,10 @@ export default function NewOrder({ onClose, onPublish, busy }) {
                   <div style={{ fontWeight: 700, marginBottom: 6 }}>ნაკვეთი ნაპოვნია</div>
                   <Row l="ფართობი" v={m2(lookup.area)} mono />
                   <Row l="მდებარეობა" v={lookup.place} />
-                  <svg viewBox="0 0 300 120" style={{ width: "100%", marginTop: 8, background: "#E3E7DD", border: "1px solid var(--line)" }}>
-                    <polygon points="60,20 230,30 245,95 80,105" fill="rgba(46,92,134,.25)" stroke="var(--blue)" strokeWidth="1.5" />
+                  <svg viewBox="0 0 300 120" style={{ width: "100%", marginTop: 8, background: "#C4C7C0", border: "1px solid var(--black)" }}>
+                    <polygon points="60,20 230,30 245,95 80,105" fill="rgba(228,255,26,.35)" stroke="var(--black)" strokeWidth="2.5" />
                     {[[60,20],[230,30],[245,95],[80,105]].map(([x,y],i) => (
-                      <circle key={i} cx={x} cy={y} r="3.5" fill="var(--amber)" stroke="var(--ink)" />
+                      <circle key={i} cx={x} cy={y} r="4" fill="var(--hivis)" stroke="var(--black)" strokeWidth="2" />
                     ))}
                   </svg>
                   <div className="warn" style={{ marginTop: 8 }}>
@@ -108,8 +113,8 @@ export default function NewOrder({ onClose, onPublish, busy }) {
               </select>
               <div className="lbl" style={{ marginTop: 10 }}>მისამართი / ორიენტირი</div>
               <input className="inp" value={manualAddr} onChange={(e) => setManualAddr(e.target.value)} placeholder="სოფელი, ქუჩა…" />
-              <div className="lbl" style={{ marginTop: 12, marginBottom: 4 }}>ტერიტორიის მონიშვნა</div>
-              <AreaDraw onArea={onArea} />
+              <div className="lbl" style={{ marginTop: 12, marginBottom: 4 }}>რუკაზე მონიშვნა</div>
+              <MapPicker onChange={onGeo} height={280} />
             </div>
           )}
         </div>
@@ -126,9 +131,9 @@ export default function NewOrder({ onClose, onPublish, busy }) {
           {photos.length > 0 && (
             <div className="wrap" style={{ marginTop: 8 }}>
               {photos.map((p, i) => (
-                <span key={i} className="pill" style={{ color: "var(--ink)" }}>
+                <span key={i} className="pill" style={{ color: "var(--black)" }}>
                   {p.length > 18 ? p.slice(0, 16) + "…" : p}
-                  <button style={{ background: "none", border: "none", color: "var(--rust)", cursor: "pointer" }}
+                  <button style={{ background: "none", border: "none", color: "var(--survey)", cursor: "pointer" }}
                     onClick={() => setPhotos((ph) => ph.filter((_, j) => j !== i))}>✕</button>
                 </span>
               ))}
@@ -164,6 +169,8 @@ export default function NewOrder({ onClose, onPublish, busy }) {
             {mode === "code" && <Row l="საკადასტრო კოდი" v={code} mono />}
             <Row l="ფართობი" v={`${m2(area)}${mode === "manual" ? " (≈)" : ""}`} mono />
             <Row l="ფოტოები" v={photos.length} mono />
+            {geo.lat && <Row l="კოორდინატები" v={`${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}`} mono />}
+            {geo.polygon && <Row l="კონტური" v={`${geo.polygon.length} წერტილი`} mono />}
             <Row l="სასურველი ვადა" v={dl === "კონკრეტული თარიღი" ? (dlDate || "—") : dl} />
           </div>
           <div className="muted" style={{ fontSize: 12.5 }}>
@@ -178,7 +185,7 @@ export default function NewOrder({ onClose, onPublish, busy }) {
         {step > 1 && <button className="btn2" onClick={() => setStep((s) => s - 1)}>უკან</button>}
         {step < 4
           ? <button className="btn" disabled={!canNext} onClick={() => setStep((s) => s + 1)}>შემდეგი</button>
-          : <button className="btn" disabled={busy} onClick={publish}>{busy ? "ქვეყნდება…" : "შეკვეთის გამოქვეყნება"}</button>}
+          : <button className="btn btn-go" disabled={busy} onClick={publish}>{busy ? "ქვეყნდება…" : "შეკვეთის გამოქვეყნება"}</button>}
       </div>
     </Sheet>
   );

@@ -24,14 +24,14 @@ export default function SurveyorProfile({ surveyorId, onClose }) {
         <>
           <div className="card tick" style={{ marginBottom: 10 }}>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <div style={{ width: 52, height: 52, background: "var(--ink)", color: "var(--raised)",
+              <div style={{ width: 52, height: 52, background: "var(--black)", color: "var(--slab)",
                 display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700 }}>
                 {p.full_name?.[0] || "?"}
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>
                   {p.full_name}{" "}
-                  {p.verified && <span style={{ color: "var(--moss)", fontSize: 13 }}>✓ Verified</span>}
+                  {p.verified && <span style={{ color: "var(--field)", fontSize: 13 }}>✓ Verified</span>}
                 </div>
                 <div className="muted" style={{ fontSize: 12.5 }}>
                   {p.user_type === "company" ? "🏢 გეოდეზიური კომპანია" : "📐 გეოდეზისტი"}
@@ -59,7 +59,7 @@ export default function SurveyorProfile({ surveyorId, onClose }) {
 
           <div className="lbl" style={{ marginBottom: 4 }}>მომსახურებები</div>
           <div className="wrap" style={{ marginBottom: 10 }}>
-            {(p.services || []).map((s) => <span key={s} className="pill" style={{ color: "var(--ink)" }}>{s}</span>)}
+            {(p.services || []).map((s) => <span key={s} className="pill" style={{ color: "var(--black)" }}>{s}</span>)}
           </div>
 
           <div className="lbl" style={{ marginBottom: 4 }}>სამუშაო რეგიონები</div>

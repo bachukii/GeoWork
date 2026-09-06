@@ -6,6 +6,9 @@ import NewOrder from "../components/NewOrder";
 import Chat from "../components/Chat";
 import RateForm from "../components/RateForm";
 import SurveyorProfile from "../components/SurveyorProfile";
+import MapView from "../components/MapView";
+import Payment, { PayPill } from "../components/Payment";
+import { DeliverablesDownload } from "../components/Deliverables";
 import { money, m2, FLOW, STATUS, COMPLAINT_KINDS } from "../lib/constants";
 
 export default function ClientView({ toast }) {
@@ -40,8 +43,8 @@ export default function ClientView({ toast }) {
     <>
       {tab === "orders" && (
         <div style={{ padding: 16 }}>
-          <button className="btn" style={{ marginBottom: 14 }} onClick={() => setShowNew(true)}>
-            + მჭირდება ამზომველის მომსახურება
+          <button className="btn btn-go" style={{ marginBottom: 14 }} onClick={() => setShowNew(true)}>
+            ახალი შეკვეთა
           </button>
 
           <div className="card tick" style={{ marginBottom: 12, display: "grid", gridTemplateColumns: "1fr 1fr" }}>
@@ -78,7 +81,7 @@ export default function ClientView({ toast }) {
           <span className="ic">📋</span>ჩემი შეკვეთები
         </button>
         <button className="navbtn" onClick={() => setShowNew(true)}>
-          <span style={{ fontSize: 22, color: "var(--amber)", lineHeight: "18px" }}>＋</span>შეკვეთა
+          <span className="ic">＋</span>შეკვეთა
         </button>
         <button className={`navbtn ${tab === "profile" ? "on" : ""}`} onClick={() => setTab("profile")}>
           <span className="ic">👤</span>პროფილი
@@ -108,8 +111,11 @@ function OrderCard({ o, onOpen }) {
       </div>
       <div style={{ fontWeight: 700 }}>{o.service}</div>
       <div className="muted" style={{ fontSize: 12.5 }}>📍 {o.place} · {m2(o.area)}</div>
+      {o.selected_bid_id && (
+        <div style={{ marginTop: 5 }}><PayPill s={o.payment_status || "unpaid"} /></div>
+      )}
       {o.status === "open" && bidCount !== null && (
-        <div style={{ fontSize: 12.5, marginTop: 4, color: "var(--amber)", fontWeight: 600 }}>
+        <div style={{ fontSize: 12.5, marginTop: 4, color: "var(--safety)", fontWeight: 600 }}>
           {bidCount} შეთავაზება
         </div>
       )}
@@ -199,6 +205,13 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
             <Row l="ფოტოები" v={(o.photos || []).length} mono />
           </div>
 
+          {(o.lat || o.polygon) && (
+            <div style={{ marginBottom: 10 }}>
+              <div className="lbl" style={{ marginBottom: 4 }}>🗺️ ადგილმდებარეობა</div>
+              <MapView lat={o.lat} lng={o.lng} polygon={o.polygon} height={200} />
+            </div>
+          )}
+
           {o.status === "open" && (
             <>
               <div className="lbl" style={{ marginBottom: 6 }}>შეთავაზებები — ხედავ მხოლოდ შენ</div>
@@ -212,8 +225,8 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                       <button style={{ background: "none", border: "none", textAlign: "left", padding: 0, cursor: "pointer" }}
                         onClick={() => setProfileOpen(b.surveyor_id)}>
-                        <div style={{ fontWeight: 700, color: "var(--blue)", textDecoration: "underline" }}>
-                          {p.full_name} {p.verified && <span style={{ color: "var(--moss)" }}>✓</span>}
+                        <div style={{ fontWeight: 700, color: "var(--marker)", textDecoration: "underline" }}>
+                          {p.full_name} {p.verified && <span style={{ color: "var(--field)" }}>✓</span>}
                         </div>
                         <div style={{ fontSize: 12 }}>
                           <Stars v={st.avg_rating} /> {Number(st.avg_rating || 0).toFixed(1)} · {st.completed_jobs ?? 0} სამუშაო
@@ -243,7 +256,7 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                   <div className="lbl">არჩეული ამზომველი</div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
                     <button style={{ background: "none", border: "none", padding: 0, fontWeight: 700,
-                      color: "var(--blue)", textDecoration: "underline", cursor: "pointer" }}
+                      color: "var(--marker)", textDecoration: "underline", cursor: "pointer" }}
                       onClick={() => setProfileOpen(b.surveyor_id)}>{p?.full_name}</button>
                     <span className="mono" style={{ fontWeight: 700 }}>{money(b.price)} · {b.days} დღე</span>
                   </div>
@@ -254,16 +267,27 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                   {FLOW.slice(1).map((s) => {
                     const reached = FLOW.indexOf(o.status) >= FLOW.indexOf(s);
                     return <span key={s} className={`pill ${reached ? STATUS[s].cls : ""}`}
-                      style={reached ? {} : { color: "var(--line)" }}>{STATUS[s].label}</span>;
+                      style={reached ? {} : { color: "var(--black)" }}>{STATUS[s].label}</span>;
                   })}
+                </div>
+
+                <div style={{ marginTop: 12, marginBottom: 12 }}>
+                  <Payment order={o} amount={b.price} meId={me.id} toast={toast}
+                    onChanged={() => { load(); onChanged(); }} />
+                </div>
+
+                <div className="lbl" style={{ marginBottom: 4 }}>📁 ნახაზები და დოკუმენტები</div>
+                <div style={{ marginBottom: 12 }}>
+                  <DeliverablesDownload orderId={orderId}
+                    isPaid={o.payment_status === "confirmed"} toast={toast} />
                 </div>
 
                 {o.status === "done" && !rated && (
                   <RateForm who={p?.full_name} busy={busy} onSubmit={submitRating} />
                 )}
                 {(o.status === "rated" || rated) && (
-                  <div className="card" style={{ marginBottom: 10, color: "var(--moss)", fontSize: 13 }}>
-                    ★ შეფასება გაგზავნილია. მადლობა!
+                  <div className="card" style={{ marginBottom: 10, color: "var(--field)", fontSize: 13 }}>
+                    შეფასება გაგზავნილია. მადლობა.
                   </div>
                 )}
 
