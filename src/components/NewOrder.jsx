@@ -2,19 +2,16 @@ import React, { useState, useRef, useCallback } from "react";
 import { Sheet, Row } from "./UI";
 import MapPicker from "./MapPicker";
 import { SERVICE_GROUPS, REGIONS, DEADLINES, m2 } from "../lib/constants";
-import { lookupCadastral } from "../lib/cadastral";
 
 export default function NewOrder({ onClose, onPublish, busy }) {
   const [step, setStep] = useState(1);
   const [cat, setCat] = useState(null);
   const [svc, setSvc] = useState(null);
-  const [mode, setMode] = useState("code");
   const [code, setCode] = useState("");
-  const [lookup, setLookup] = useState(undefined); // undefined = not searched
-  const [manualArea, setManualArea] = useState(0);
-  const [geo, setGeo] = useState({ lat: null, lng: null, polygon: null });
-  const [manualRegion, setManualRegion] = useState(REGIONS[0]);
-  const [manualAddr, setManualAddr] = useState("");
+  const [geo, setGeo] = useState({ lat: null, lng: null, polygon: null, area: 0, fromParcel: false });
+  const [parcelCode, setParcelCode] = useState(null);
+  const [region, setRegion] = useState(REGIONS[0]);
+  const [addr, setAddr] = useState("");
   const [photos, setPhotos] = useState([]);
   const [desc, setDesc] = useState("");
   const [dl, setDl] = useState(DEADLINES[1]);
@@ -22,22 +19,26 @@ export default function NewOrder({ onClose, onPublish, busy }) {
   const fileRef = useRef();
 
   const onGeo = useCallback((g) => {
-    setGeo(g);
-    if (g.area) setManualArea(g.area);
+    setGeo((prev) => ({ ...g, fromParcel: prev.fromParcel }));
+  }, []);
+
+  const onParcel = useCallback((p) => {
+    setParcelCode(p.code || null);
+    if (p.code) setCode(p.code);
+    setGeo((prev) => ({ ...prev, fromParcel: true }));
   }, []);
 
   const canNext =
     step === 1 ? !!svc :
-    step === 2 ? (mode === "code" ? !!lookup : (geo.lat !== null || manualArea > 0)) : true;
+    step === 2 ? (geo.lat !== null || geo.area > 0) : true;
 
-  const region = mode === "code" ? lookup?.region : manualRegion;
-  const place = mode === "code" ? lookup?.place : (manualAddr.trim() || manualRegion);
-  const area = mode === "code" ? lookup?.area : manualArea;
+  const place = addr.trim() || region;
+  const area = geo.area || 0;
 
   const publish = () => onPublish({
     category: cat, service: svc, region, place,
-    cadastral_code: mode === "code" ? code.trim() : null,
-    area, area_source: mode === "code" ? "cadastral" : "manual",
+    cadastral_code: (parcelCode || code).trim() || null,
+    area, area_source: geo.fromParcel ? "cadastral" : "manual",
     lat: geo.lat, lng: geo.lng, polygon: geo.polygon,
     photos, description: desc.trim() || null,
     deadline: dl === "კონკრეტული თარიღი" ? (dlDate || dl) : dl,
@@ -69,52 +70,23 @@ export default function NewOrder({ onClose, onPublish, busy }) {
 
       {step === 2 && (
         <div>
-          <div className="grid2" style={{ marginBottom: 12 }}>
-            <button className={`chip ${mode === "code" ? "on" : ""}`} onClick={() => setMode("code")}>საკადასტრო კოდი მაქვს</button>
-            <button className={`chip ${mode === "manual" ? "on" : ""}`} onClick={() => setMode("manual")}>რუკაზე მოვნიშნავ</button>
+          <div className="lbl">საკადასტრო კოდი</div>
+          <input className="inp mono" placeholder="01.72.14.031.045" value={code}
+            onChange={(e) => { setCode(e.target.value); setLookup(undefined); }} />
+          <div className="muted" style={{ fontSize: 11.5, marginTop: 5 }}>
+            თუ კოდი გაქვს — ჩაწერე და რუკაზე „კოდით პოვნა" დააჭირე.
+            თუ არა — მონიშნე ნაკვეთი რუკაზე დაჭერით ან დახაზე კონტური ხელით.
           </div>
 
-          {mode === "code" ? (
-            <div>
-              <div className="lbl">საკადასტრო კოდი</div>
-              <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
-                <input className="inp mono" placeholder="01.72.14.031.045" value={code}
-                  onChange={(e) => { setCode(e.target.value); setLookup(undefined); }} />
-                <button className="btn btn-sm" style={{ marginTop: 4, whiteSpace: "nowrap" }}
-                  onClick={() => setLookup(lookupCadastral(code))}>ძებნა</button>
-              </div>
-              {lookup === null && (
-                <div style={{ fontSize: 12, color: "var(--survey)", marginTop: 6 }}>
-                  კოდი ვერ მოიძებნა. ფორმატი: XX.XX.XX.XXX ან XX.XX.XX.XXX.XXX
-                </div>
-              )}
-              {lookup && (
-                <div className="card tick" style={{ marginTop: 12 }}>
-                  <div style={{ fontWeight: 700, marginBottom: 6 }}>ნაკვეთი ნაპოვნია</div>
-                  <Row l="ფართობი" v={m2(lookup.area)} mono />
-                  <Row l="მდებარეობა" v={lookup.place} />
-                  <svg viewBox="0 0 300 120" style={{ width: "100%", marginTop: 8, background: "#C4C7C0", border: "1px solid var(--black)" }}>
-                    <polygon points="60,20 230,30 245,95 80,105" fill="rgba(228,255,26,.35)" stroke="var(--black)" strokeWidth="2.5" />
-                    {[[60,20],[230,30],[245,95],[80,105]].map(([x,y],i) => (
-                      <circle key={i} cx={x} cy={y} r="4" fill="var(--hivis)" stroke="var(--black)" strokeWidth="2" />
-                    ))}
-                  </svg>
-                  <div className="warn" style={{ marginTop: 8 }}>
-                    ⚠️ დემო-მონაცემი. რეალური NAPR-ის მოთხოვნა ჯერ არ არის ჩართული.
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div>
-              <div className="lbl">რეგიონი</div>
-              <select className="inp" value={manualRegion} onChange={(e) => setManualRegion(e.target.value)}>
-                {REGIONS.map((r) => <option key={r}>{r}</option>)}
-              </select>
-              <div className="lbl" style={{ marginTop: 10 }}>მისამართი / ორიენტირი</div>
-              <input className="inp" value={manualAddr} onChange={(e) => setManualAddr(e.target.value)} placeholder="სოფელი, ქუჩა…" />
-              <div className="lbl" style={{ marginTop: 12, marginBottom: 4 }}>რუკაზე მონიშვნა</div>
-              <MapPicker onChange={onGeo} height={280} />
+          <div style={{ marginTop: 12 }}>
+            <MapPicker onChange={onGeo} onParcelFound={onParcel} code={code.trim()} height={320} />
+          </div>
+
+          {geo.area > 0 && (
+            <div className="card tick" style={{ marginTop: 10 }}>
+              <Row l="ფართობი" v={m2(geo.area)} mono />
+              {parcelCode && <Row l="საკადასტრო კოდი" v={parcelCode} mono />}
+              <Row l="წყარო" v={geo.fromParcel ? "საჯარო რეესტრი" : "ხელით მონიშნული"} />
             </div>
           )}
         </div>
@@ -122,6 +94,17 @@ export default function NewOrder({ onClose, onPublish, busy }) {
 
       {step === 3 && (
         <div>
+          <div className="lbl">რეგიონი</div>
+          <select className="inp" value={region} onChange={(e) => setRegion(e.target.value)}>
+            {REGIONS.map((r) => <option key={r}>{r}</option>)}
+          </select>
+
+          <div className="lbl" style={{ marginTop: 10 }}>მისამართი / ორიენტირი</div>
+          <input className="inp" value={addr} onChange={(e) => setAddr(e.target.value)}
+            placeholder="თბილისი, დიდი დიღომი…" />
+
+          <div className="hl" />
+
           <div className="lbl">ფოტოები და დოკუმენტები</div>
           <input ref={fileRef} type="file" multiple accept="image/*,.pdf" style={{ display: "none" }}
             onChange={(e) => setPhotos((p) => [...p, ...Array.from(e.target.files).map((f) => f.name)])} />
@@ -166,8 +149,8 @@ export default function NewOrder({ onClose, onPublish, busy }) {
             <div style={{ fontWeight: 700, marginBottom: 8 }}>შეკვეთის შეჯამება</div>
             <Row l="მომსახურება" v={svc} />
             <Row l="მდებარეობა" v={place} />
-            {mode === "code" && <Row l="საკადასტრო კოდი" v={code} mono />}
-            <Row l="ფართობი" v={`${m2(area)}${mode === "manual" ? " (≈)" : ""}`} mono />
+            {(parcelCode || code) && <Row l="საკადასტრო კოდი" v={parcelCode || code} mono />}
+            <Row l="ფართობი" v={`${m2(area)}${geo.fromParcel ? "" : " (≈)"}`} mono />
             <Row l="ფოტოები" v={photos.length} mono />
             {geo.lat && <Row l="კოორდინატები" v={`${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}`} mono />}
             {geo.polygon && <Row l="კონტური" v={`${geo.polygon.length} წერტილი`} mono />}

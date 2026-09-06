@@ -41,6 +41,7 @@ export default function ClientView({ toast }) {
 
   return (
     <>
+      <div className="shell-body">
       {tab === "orders" && (
         <div style={{ padding: 16 }}>
           <button className="btn btn-go" style={{ marginBottom: 14 }} onClick={() => setShowNew(true)}>
@@ -75,6 +76,8 @@ export default function ClientView({ toast }) {
           <button className="btn2 btn-danger" style={{ marginTop: 14 }} onClick={signOut}>გასვლა</button>
         </div>
       )}
+
+      </div>
 
       <div className="nav">
         <button className={`navbtn ${tab === "orders" ? "on" : ""}`} onClick={() => setTab("orders")}>

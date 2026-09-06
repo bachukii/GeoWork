@@ -59,6 +59,7 @@ export default function AdminView({ toast }) {
 
   return (
     <>
+      <div className="shell-body">
       {tab === "stats" && (
         <div style={{ padding: 16 }}>
           <div className="card tick" style={{ marginBottom: 12 }}>
@@ -179,6 +180,8 @@ export default function AdminView({ toast }) {
           ))}
         </div>
       )}
+
+      </div>
 
       <div className="nav">
         <button className={`navbtn ${tab === "stats" ? "on" : ""}`} onClick={() => setTab("stats")}><span className="ic">📊</span>სტატისტიკა</button>

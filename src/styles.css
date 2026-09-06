@@ -1,22 +1,28 @@
 /* ============================================================
    GeoBid — ვიზუალური სისტემა
-   წყარო: ამზომველის საველე აღჭურვილობა — hi-vis ჟილეტი,
-   სახიფათო ლენტი, ბეტონი, სანიველირო ნიშნული.
+
+   ფერები აღებულია GEOID-ის საქმიდან: გეოდეზიური ხელსაწყოების
+   მუქი ლურჯი (კორპუსი, ფუტლარი), საველე ოქროსფერი (ჟილეტი,
+   შტატივის ნიშნული), ბეტონისფერი ფონი.
+
+   ⚠️ ბრენდის ფერების შესაცვლელად მხოლოდ ეს ოთხი ხაზია საჭირო.
    ============================================================ */
 
 :root {
-  --concrete:  #D6D8D2;   /* ცივი ბეტონი — ფონი */
-  --slab:      #EDEEE9;   /* ამაღლებული ზედაპირი */
-  --black:     #0F1113;   /* სტრუქტურა, საზღვრები, სათაურები */
-  --graphite:  #3A3F44;   /* მეორეული ტექსტი */
-  --hivis:     #E4FF1A;   /* სასიგნალო ყვითელი — ერთადერთი ყვირილი */
-  --safety:    #FF5C1A;   /* უსაფრთხოების ნარინჯისფერი */
-  --survey:    #D62828;   /* საკადასტრო წითელი — შეცდომა, გაუქმება */
-  --field:     #1F7A4C;   /* საველე მწვანე — დასრულებული */
-  --marker:    #2B5FAD;   /* ნიშნულის ლურჯი — მიმდინარე */
+  --navy:     #0D2E4E;   /* ბრენდის ძირითადი — სტრუქტურა, სათაურები */
+  --sky:      #2E7DC2;   /* მეორეული — ბმულები, მიმდინარე სტატუსი */
+  --gold:     #F2C300;   /* აქცენტი — მთავარი მოქმედება, ხაზგასმა */
+  --concrete: #E9EBE6;   /* ფონი */
 
-  --edge: 2px solid var(--black);
-  --edge-thin: 1px solid var(--black);
+  --slab:     #F8F9F6;
+  --graphite: #55606B;
+  --survey:   #C0392B;   /* შეცდომა, გაუქმება */
+  --field:    #1E7A52;   /* დასრულებული */
+
+  --edge: 2px solid var(--navy);
+  --edge-thin: 1px solid var(--navy);
+  --shell: 1360px;
+  --rail: 236px;
 }
 
 * { box-sizing: border-box; }
@@ -24,13 +30,17 @@ html, body, #root { height: 100%; margin: 0; }
 
 body {
   font-family: "Noto Sans Georgian", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: var(--graphite);
-  color: var(--black);
+  background: var(--concrete);
+  color: var(--navy);
   -webkit-font-smoothing: antialiased;
   font-size: 15px;
   line-height: 1.45;
 }
 
+.mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-weight: 500; }
+.muted { color: var(--graphite); }
+
+/* ============ მობილურის კარკასი (ნაგულისხმევი) ============ */
 .app {
   background: var(--concrete);
   max-width: 480px;
@@ -39,217 +49,225 @@ body {
   position: relative;
   padding-bottom: 84px;
 }
+.rail { display: none; }
+.shell-body { display: block; }
 
-.mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-weight: 500; }
-.muted { color: var(--graphite); }
-
-/* ---------- სახიფათო ლენტი: ხელმოწერის მოტივი ---------- */
-.hazard {
-  height: 7px;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--hivis) 0 9px,
-    var(--black) 9px 18px
-  );
+/* გეოდეზიური ბადე — ბრენდის ტექსტურა */
+.grid-band {
+  height: 6px;
+  background:
+    repeating-linear-gradient(90deg, var(--navy) 0 1px, transparent 1px 14px),
+    var(--gold);
 }
 
-/* ---------- სათაური ---------- */
-.hdr {
-  background: var(--black);
-  color: var(--concrete);
-  padding: 16px 16px 14px;
-}
-.hdr h1 {
-  margin: 0;
-  font-size: 27px;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
-.hdr .sub { font-size: 11.5px; color: #9AA1A7; margin-top: 3px; }
+/* ============ სათაური ============ */
+.hdr { background: var(--navy); color: var(--slab); padding: 15px 16px 13px; }
 .hdr .who { font-size: 11.5px; text-align: right; }
-.hdr .who b { color: var(--hivis); font-weight: 800; }
+.hdr .who b { color: var(--gold); font-weight: 800; display: block; }
 
-/* ---------- ბლოკები ---------- */
-.card {
-  background: var(--slab);
-  border: var(--edge);
-  padding: 13px;
-  position: relative;
-}
-/* გამორჩეული ბლოკი — ყვითელი ზოლი მარცხნივ */
-.tick { border-left-width: 6px; border-left-color: var(--hivis); }
+/* ============ ბლოკები ============ */
+.card { background: var(--slab); border: var(--edge); padding: 13px; position: relative; }
+.tick { border-left-width: 6px; border-left-color: var(--gold); }
 
-/* ---------- სტატუსის ნიშნები ---------- */
+/* ============ სტატუსები ============ */
 .pill {
   display: inline-flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 700;
-  padding: 3px 8px;
-  border: var(--edge-thin);
-  background: var(--slab);
-  white-space: nowrap;
+  font-size: 11px; font-weight: 700; padding: 3px 8px;
+  border: var(--edge-thin); background: var(--slab); white-space: nowrap;
 }
-.s-open       { background: var(--hivis); }
-.s-selected   { background: var(--marker); color: #fff; border-color: var(--marker); }
-.s-scheduled  { background: var(--safety); color: #fff; border-color: var(--safety); }
-.s-inprogress { background: var(--marker); color: #fff; border-color: var(--marker); }
+.s-open       { background: var(--gold); }
+.s-selected   { background: var(--sky); color: #fff; border-color: var(--sky); }
+.s-scheduled  { background: var(--gold); }
+.s-inprogress { background: var(--sky); color: #fff; border-color: var(--sky); }
 .s-processing { background: var(--slab); }
 .s-done       { background: var(--field); color: #fff; border-color: var(--field); }
 .s-rated      { background: var(--field); color: #fff; border-color: var(--field); }
 .s-cancel     { background: var(--survey); color: #fff; border-color: var(--survey); }
 
-/* ---------- ღილაკები ---------- */
+/* ============ ღილაკები ============ */
 .btn {
-  background: var(--black); color: var(--concrete);
-  padding: 13px 16px;
-  font-family: inherit; font-size: 15px; font-weight: 800;
+  background: var(--navy); color: var(--slab);
+  padding: 13px 16px; font-family: inherit; font-size: 15px; font-weight: 800;
   border: var(--edge); width: 100%; cursor: pointer;
 }
-.btn:active { background: var(--hivis); color: var(--black); }
+.btn:active { background: var(--sky); }
 .btn:disabled { opacity: .35; cursor: not-allowed; }
-
-/* მთავარი მოქმედება — ყვითელი */
-.btn-go { background: var(--hivis); color: var(--black); }
-.btn-go:active { background: var(--black); color: var(--hivis); }
+.btn-go { background: var(--gold); color: var(--navy); }
+.btn-go:active { background: var(--navy); color: var(--gold); }
 
 .btn2 {
-  background: transparent; color: var(--black);
+  background: transparent; color: var(--navy);
   padding: 11px 16px; font-family: inherit; font-size: 14px; font-weight: 700;
   border: var(--edge); width: 100%; cursor: pointer;
 }
-.btn2:active { background: var(--black); color: var(--concrete); }
+.btn2:active { background: var(--navy); color: var(--slab); }
 .btn-sm { padding: 7px 11px; font-size: 12.5px; width: auto; }
 .btn-danger { color: var(--survey); border-color: var(--survey); }
 .btn-danger:active { background: var(--survey); color: #fff; }
 
-/* ---------- ველები ---------- */
+/* ============ ველები ============ */
 .inp, textarea.inp, select.inp {
-  width: 100%; padding: 11px 12px;
-  font-family: inherit; font-size: 16px;
-  border: var(--edge); background: var(--slab); color: var(--black);
-  margin-top: 5px;
+  width: 100%; padding: 11px 12px; font-family: inherit; font-size: 16px;
+  border: var(--edge); background: var(--slab); color: var(--navy); margin-top: 5px;
 }
-.inp:focus { outline: none; background: #fff; box-shadow: inset 0 0 0 3px var(--hivis); }
-.lbl {
-  font-size: 12px; font-weight: 800; color: var(--black);
-  display: block;
-}
+.inp:focus { outline: none; background: #fff; box-shadow: inset 0 0 0 3px var(--gold); }
+.lbl { font-size: 12px; font-weight: 800; display: block; }
 
-/* ---------- არჩევანი ---------- */
 .chip {
   padding: 10px 12px; border: var(--edge-thin); font-family: inherit;
   font-size: 13.5px; font-weight: 600;
-  background: var(--slab); color: var(--black); text-align: left; cursor: pointer;
+  background: var(--slab); color: var(--navy); text-align: left; cursor: pointer;
 }
 .chip.on {
-  background: var(--black); color: var(--concrete);
-  border-color: var(--black);
-  box-shadow: inset 3px 0 0 var(--hivis);
+  background: var(--navy); color: var(--slab); border-color: var(--navy);
+  box-shadow: inset 3px 0 0 var(--gold);
 }
 .chip-sm { padding: 6px 10px; font-size: 12.5px; }
 
-/* ---------- ქვედა ნავიგაცია ---------- */
+/* ============ ქვედა ნავიგაცია (მობილური) ============ */
 .nav {
   position: fixed; bottom: 0; left: 0; right: 0;
   max-width: 480px; margin: 0 auto;
-  background: var(--black); display: flex; z-index: 20;
-  border-top: 3px solid var(--hivis);
+  background: var(--navy); display: flex; z-index: 20;
+  border-top: 3px solid var(--gold);
 }
 .navbtn {
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
   font-family: inherit; font-size: 10px; font-weight: 700;
-  padding: 10px 2px; color: #8B9298; background: none; border: none; cursor: pointer;
+  padding: 10px 2px; color: #93A3B3; background: none; border: none; cursor: pointer;
 }
 .navbtn .ic { font-size: 17px; line-height: 1; }
-.navbtn.on { color: var(--hivis); }
+.navbtn.on { color: var(--gold); }
 
-/* ---------- სტატისტიკა ---------- */
+/* ============ სტატისტიკა ============ */
 .stat { text-align: center; padding: 12px 4px; }
 .stat .n {
   font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 30px; font-weight: 700; line-height: 1;
-  letter-spacing: -0.03em;
+  font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -0.03em;
 }
-.stat .t {
-  font-size: 10.5px; font-weight: 700; color: var(--graphite);
-  margin-top: 5px;
-}
+.stat .t { font-size: 10.5px; font-weight: 700; color: var(--graphite); margin-top: 5px; }
 
-/* ---------- სტრიქონები ---------- */
-.row {
-  display: flex; justify-content: space-between; gap: 10px;
-  font-size: 13.5px; padding: 4px 0;
-}
-.hl { border-top: var(--edge-thin); margin: 10px 0; }
+.row { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; padding: 4px 0; }
+.hl { border-top: var(--edge-thin); margin: 10px 0; opacity: .35; }
 
-/* ---------- ჩატი ---------- */
 .bubble { max-width: 80%; padding: 9px 12px; font-size: 14px; margin-bottom: 7px; border: var(--edge-thin); }
-.me { background: var(--black); color: var(--concrete); margin-left: auto; }
+.me { background: var(--navy); color: var(--slab); margin-left: auto; }
 .them { background: var(--slab); }
 
-/* ---------- ფურცელი ---------- */
+/* ============ ფურცელი ============ */
 .scrim {
-  position: fixed; inset: 0; background: rgba(15,17,19,.72);
+  position: fixed; inset: 0; background: rgba(13,46,78,.7);
   display: flex; align-items: flex-end; z-index: 50;
 }
 .sheet {
   background: var(--concrete); width: 100%; max-width: 480px; margin: 0 auto;
   max-height: 90vh; overflow-y: auto; padding: 0 0 26px;
-  border-top: 3px solid var(--black);
 }
 .sheet-inner { padding: 0 16px; }
 .sheet-hdr {
-  background: var(--black); color: var(--concrete);
-  padding: 14px 16px; margin-bottom: 14px;
+  background: var(--navy); color: var(--slab); padding: 14px 16px; margin-bottom: 14px;
   display: flex; justify-content: space-between; align-items: center;
 }
 .sheet-hdr .t { font-size: 18px; font-weight: 900; letter-spacing: -0.01em; }
-.sheet-hdr button { background: none; border: none; color: var(--hivis); font-size: 22px; cursor: pointer; padding: 0; }
+.sheet-hdr button { background: none; border: none; color: var(--gold); font-size: 22px; cursor: pointer; padding: 0; }
 
-/* ---------- შეტყობინებები ---------- */
+/* ============ შეტყობინებები ============ */
 .toast {
   position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
-  background: var(--hivis); color: var(--black);
-  border: var(--edge);
-  padding: 10px 16px; font-size: 13.5px; font-weight: 700;
-  z-index: 99; max-width: 90%;
+  background: var(--gold); color: var(--navy); border: var(--edge);
+  padding: 10px 16px; font-size: 13.5px; font-weight: 700; z-index: 99; max-width: 90%;
 }
 .err  { background: var(--survey); color: #fff; border: var(--edge); font-size: 13px; font-weight: 600; padding: 10px 12px; margin-bottom: 10px; }
 .ok   { background: var(--field);  color: #fff; border: var(--edge); font-size: 13px; font-weight: 600; padding: 10px 12px; margin-bottom: 10px; }
-.warn { background: var(--hivis); color: var(--black); border: var(--edge); font-size: 12.5px; font-weight: 600; padding: 10px 12px; }
+.warn { background: #FFF3C4; color: #5C4600; border: 2px solid var(--gold); font-size: 12.5px; font-weight: 600; padding: 10px 12px; }
 
-/* ---------- დამხმარეები ---------- */
+/* ============ დამხმარეები ============ */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
 .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; }
 .wrap  { display: flex; flex-wrap: wrap; gap: 6px; }
 .col   { display: flex; flex-direction: column; gap: 9px; }
 .center { text-align: center; padding: 34px 16px; color: var(--graphite); }
-.star { color: var(--safety); letter-spacing: -1px; }
+.star { color: var(--gold); letter-spacing: -1px; }
 
-/* ---------- საწყისი ეკრანი ---------- */
-.gate-hero {
-  background: var(--black); color: var(--concrete);
-  padding: 34px 20px 30px;
-}
+/* ============ საწყისი ეკრანი ============ */
+.gate-hero { background: var(--navy); color: var(--slab); padding: 30px 20px 28px; }
 .gate-hero .mark {
-  font-size: 46px; font-weight: 900; line-height: .92;
-  letter-spacing: -0.035em; margin: 0;
+  font-size: 42px; font-weight: 900; line-height: .95;
+  letter-spacing: -0.035em; margin: 18px 0 0;
 }
-.gate-hero .mark span { color: var(--hivis); }
-.gate-hero .lede {
-  font-size: 14.5px; color: #A8AFB5; margin-top: 12px; max-width: 34ch;
-}
+.gate-hero .mark span { color: var(--gold); }
+.gate-hero .lede { font-size: 14.5px; color: #A9B8C6; margin-top: 12px; max-width: 40ch; }
 .role-card { background: var(--slab); border: var(--edge); padding: 16px; }
-.role-card .glyph { font-size: 30px; line-height: 1; }
+.role-card .glyph { font-size: 28px; line-height: 1; }
 .role-card h2 { margin: 8px 0 0; font-size: 19px; font-weight: 900; letter-spacing: -0.01em; }
 .role-card p { margin: 6px 0 14px; font-size: 13px; color: var(--graphite); }
 
-/* ფოკუსი კლავიატურისთვის */
-:focus-visible { outline: 3px solid var(--safety); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+.leaflet-container { border: var(--edge); font-family: inherit; }
 
-@media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
+/* ============================================================
+   ფართო ეკრანი — გვერდითი მენიუ ორსვეტიანი შიგთავსით
+   ============================================================ */
+@media (min-width: 900px) {
+  body { background: #D3D7D1; }
+
+  .app {
+    max-width: var(--shell);
+    padding-bottom: 0;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: var(--rail) 1fr;
+    grid-template-rows: auto auto 1fr;
+    border-left: var(--edge);
+    border-right: var(--edge);
+  }
+
+  /* სათაური მთელ სიგანეზე */
+  .hdr { grid-column: 1 / -1; padding: 16px 24px; }
+  .grid-band { grid-column: 1 / -1; }
+
+  /* ქვედა ნავიგაცია → გვერდითი რელსი */
+  .nav {
+    position: static; max-width: none; margin: 0;
+    grid-column: 1; grid-row: 3;
+    flex-direction: column; border-top: none;
+    border-right: var(--edge); padding-top: 14px;
+    align-self: stretch;
+  }
+  .navbtn {
+    flex: none; flex-direction: row; justify-content: flex-start;
+    gap: 11px; padding: 13px 20px; font-size: 13.5px;
+  }
+  .navbtn .ic { font-size: 18px; }
+  .navbtn.on { background: rgba(242,195,0,.13); box-shadow: inset 4px 0 0 var(--gold); }
+
+  .shell-body {
+    grid-column: 2; grid-row: 3;
+    padding: 22px 24px 40px;
+    max-width: 1040px;
+  }
+
+  /* შიგთავსი ორ სვეტად, სადაც ეს გამოსადეგია */
+  .split { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 20px; align-items: start; }
+  .grid3 { grid-template-columns: repeat(3, 1fr); }
+  .grid2 { gap: 10px; }
+
+  /* ბარათების სია ორ სვეტად */
+  .col-wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+
+  /* ფურცელი გვერდიდან ამოდის, არა ქვევიდან */
+  .scrim { align-items: stretch; justify-content: flex-end; }
+  .sheet {
+    max-width: 560px; margin: 0; max-height: 100vh;
+    border-left: var(--edge); padding-bottom: 40px;
+  }
+
+  .toast { top: 20px; left: auto; right: 24px; transform: none; }
+  .gate-hero .mark { font-size: 56px; }
 }
 
-/* Leaflet — საზღვრები ჩვენს სტილში */
-.leaflet-container { border: var(--edge); font-family: inherit; }
+@media (min-width: 1200px) {
+  .gate-wide { display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; gap: 40px; }
+  .gate-wide .roles { display: grid; gap: 14px; }
+}

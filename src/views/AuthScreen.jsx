@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { REGIONS, ALL_SERVICES } from "../lib/constants";
+import Logo from "../components/Logo";
 
 export default function AuthScreen() {
   const { signIn, signUp } = useAuth();
@@ -50,16 +51,21 @@ function Landing({ onPick }) {
   return (
     <div>
       <div className="gate-hero">
-        <h1 className="mark">ამზომველს<br />ეძებ?<br /><span>დაელოდე<br />ფასებს.</span></h1>
-        <p className="lede">
-          აქვეყნებ სამუშაოს. ამზომველები გიგზავნიან ფასს ერთმანეთისგან დამოუკიდებლად —
-          ვერავინ ხედავს ვინ რამდენი დაწერა. ირჩევ შენ.
-        </p>
+        <div className="gate-wide">
+          <div>
+            <Logo size={30} light />
+            <h1 className="mark">ამზომველს ეძებ?<br /><span>დაელოდე ფასებს.</span></h1>
+            <p className="lede">
+              აქვეყნებ სამუშაოს. ამზომველები გიგზავნიან ფასს ერთმანეთისგან
+              დამოუკიდებლად — ვერავინ ხედავს ვინ რამდენი დაწერა. ირჩევ შენ.
+            </p>
+          </div>
+        </div>
       </div>
-      <div className="hazard" />
+      <div className="grid-band" />
 
-      <div style={{ padding: 16 }}>
-        <div className="col">
+      <div style={{ padding: 18, maxWidth: 760, margin: "0 auto" }}>
+        <div className="roles col">
           <div className="role-card">
             <div className="glyph">🏗</div>
             <h2>დამკვეთი ვარ</h2>
@@ -79,8 +85,12 @@ function Landing({ onPick }) {
           </div>
         </div>
 
-        <div className="hl" style={{ margin: "18px 0" }} />
+        <div className="hl" style={{ margin: "20px 0" }} />
         <button className="btn2" onClick={() => onPick("login")}>შესვლა</button>
+
+        <div className="muted" style={{ fontSize: 11.5, textAlign: "center", marginTop: 22 }}>
+          GeoBid — GEOID-ის პროდუქტი
+        </div>
       </div>
     </div>
   );

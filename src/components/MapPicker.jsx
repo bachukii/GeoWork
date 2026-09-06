@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { polygonArea, centroid } from "../lib/geo";
+import { BASEMAPS, cadastreOverlay } from "../lib/basemaps";
+import LayerSwitch from "./LayerSwitch";
+import { lookupByCode, identifyAt, codeFromProps } from "../lib/napr";
 import { m2 } from "../lib/constants";
 
 // ნაგულისხმევი ცენტრი — თბილისი
@@ -31,6 +34,8 @@ export default function MapPicker({
   onChange,
   height = 300,
   readOnly = false,
+  code,                  // საკადასტრო კოდი — ავტომატური მონიშვნისთვის
+  onParcelFound,         // (parcel) => void — ფართობი/კოდი უკან
 }) {
   const boxRef = useRef(null);
   const mapRef = useRef(null);
@@ -38,12 +43,20 @@ export default function MapPicker({
   const polyRef = useRef(null);
   const vertexLayerRef = useRef(null);
 
-  const [mode, setMode] = useState("point"); // point | polygon
+  const [mode, setMode] = useState("parcel"); // parcel | point | polygon
+  const [base, setBase] = useState("osm");
+  const [cadastre, setCadastre] = useState(false);
+  const baseRef = useRef(null);
+  const underRef = useRef(null);
+  const cadRef = useRef(null);
   const [pts, setPts] = useState(value?.polygon || []);
   const [center, setCenter] = useState(
     value?.lat ? [value.lat, value.lng] : null
   );
   const [locating, setLocating] = useState(false);
+  const [seeking, setSeeking] = useState(false);
+  const [note, setNote] = useState(null);   // {kind, text}
+  const parcelRef = useRef(null);
 
   const area = polygonArea(pts);
 
@@ -59,11 +72,6 @@ export default function MapPicker({
       attributionControl: true,
     });
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "© OpenStreetMap",
-    }).addTo(map);
-
     vertexLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
 
@@ -74,18 +82,59 @@ export default function MapPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ---------- საბაზისო ფენა ----------
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const cfg = BASEMAPS[base];
+
+    if (underRef.current) { map.removeLayer(underRef.current); underRef.current = null; }
+    if (baseRef.current)  { map.removeLayer(baseRef.current);  baseRef.current = null; }
+
+    // ნაწილობრივი დაფარვის ფენას ქვეშ სარეზერვო ედება
+    if (cfg.under) {
+      underRef.current = BASEMAPS[cfg.under].make().addTo(map);
+      underRef.current.setZIndex(1);
+    }
+    baseRef.current = cfg.make().addTo(map);
+    baseRef.current.setZIndex(2);
+  }, [base]);
+
+  // ---------- საკადასტრო ფენა ----------
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (cadRef.current) { map.removeLayer(cadRef.current); cadRef.current = null; }
+    if (cadastre) {
+      cadRef.current = cadastreOverlay().addTo(map);
+      cadRef.current.setZIndex(3);
+    }
+  }, [cadastre]);
+
   // ---------- დაჭერის დამუშავება ----------
   useEffect(() => {
     const map = mapRef.current;
     if (!map || readOnly) return;
 
-    const onClick = (e) => {
+    const onClick = async (e) => {
       const p = [e.latlng.lat, e.latlng.lng];
       if (mode === "point") {
         setCenter(p);
         setPts([]);
-      } else {
+      } else if (mode === "polygon") {
         setPts((prev) => [...prev, p]);
+      } else if (mode === "parcel") {
+        setSeeking(true);
+        setNote(null);
+        try {
+          const r = await identifyAt(map, e.latlng);
+          if (r.ok) {
+            applyParcel(r.parcel);
+          } else {
+            setNote({ kind: "warn", text: "ამ ადგილას რეგისტრირებული ნაკვეთი ვერ მოიძებნა." });
+          }
+        } catch { /* გაუქმებული */ }
+        setSeeking(false);
       }
     };
     map.on("click", onClick);
@@ -118,6 +167,33 @@ export default function MapPicker({
       pts.forEach((p) => L.marker(p, { icon: vertexIcon }).addTo(vertexLayerRef.current));
     }
   }, [pts, readOnly]);
+
+  // ---------- ნაკვეთის გამოყენება ----------
+  const applyParcel = useCallback((parcel) => {
+    const map = mapRef.current;
+    setPts(parcel.outer);
+    setMode("parcel");
+    if (map) map.fitBounds(parcel.bbox, { padding: [26, 26] });
+    parcelRef.current = parcel;
+    const found = codeFromProps(parcel.props);
+    setNote({ kind: "ok", text: found ? `ნაკვეთი მონიშნულია — ${found}` : "ნაკვეთი მონიშნულია" });
+    onParcelFound?.({ ...parcel, code: found });
+  }, [onParcelFound]);
+
+  // ---------- კოდით ძებნა ----------
+  const seekCode = useCallback(async () => {
+    if (!code) return;
+    setSeeking(true); setNote(null);
+    try {
+      const r = await lookupByCode(code);
+      if (r.ok) applyParcel(r.parcel);
+      else setNote({
+        kind: "warn",
+        text: "ამ კოდით ნაკვეთი ვერ მოიძებნა. მონიშნე რუკაზე დაჭერით ან დახაზე კონტური.",
+      });
+    } catch { /* ignore */ }
+    setSeeking(false);
+  }, [code, applyParcel]);
 
   // ---------- ცვლილების ამოტანა ზემოთ ----------
   const emit = useCallback(() => {
@@ -159,7 +235,36 @@ export default function MapPicker({
         </div>
       )}
 
-      <div ref={boxRef} style={{ height, border: "1px solid var(--black)", zIndex: 1 }} />
+      {!readOnly && (
+        <>
+          <div className="grid3" style={{ gap: 6, marginBottom: 7 }}>
+            <button className={`chip chip-sm ${mode === "parcel" ? "on" : ""}`}
+              onClick={() => { setMode("parcel"); setCadastre(true); }}>ნაკვეთის არჩევა</button>
+            <button className={`chip chip-sm ${mode === "point" ? "on" : ""}`}
+              onClick={() => setMode("point")}>წერტილი</button>
+            <button className={`chip chip-sm ${mode === "polygon" ? "on" : ""}`}
+              onClick={() => { setMode("polygon"); setPts([]); }}>ხელით დახაზვა</button>
+          </div>
+
+          {mode === "parcel" && code && (
+            <button className="btn btn-sm" style={{ width: "100%", marginBottom: 7 }}
+              disabled={seeking} onClick={seekCode}>
+              {seeking ? "იძებნება…" : `კოდით პოვნა — ${code}`}
+            </button>
+          )}
+
+          <LayerSwitch base={base} setBase={setBase} cadastre={cadastre} setCadastre={setCadastre} />
+        </>
+      )}
+
+      <div ref={boxRef} style={{ height, zIndex: 1 }} />
+
+      {BASEMAPS[base].partial && (
+        <div className="warn" style={{ marginTop: 6 }}>
+          ორთოფოტოს დაფარვა ნაწილობრივია (2014, დასავლეთ საქართველო).
+          სხვა რეგიონში ქვედა ფენა ჩანს.
+        </div>
+      )}
 
       {!readOnly && (
         <>
@@ -177,8 +282,18 @@ export default function MapPicker({
             )}
           </div>
 
+          {note && (
+            <div className={note.kind === "ok" ? "ok" : "warn"} style={{ marginTop: 7 }}>
+              {note.text}
+            </div>
+          )}
+
           <div className="card" style={{ marginTop: 8, fontSize: 12.5 }}>
-            {mode === "point" ? (
+            {mode === "parcel" ? (
+              pts.length >= 3
+                ? <>⬡ ნაკვეთი მონიშნულია · <b className="mono">≈ {m2(Math.round(area))}</b></>
+                : <span className="muted">დააჭირე ნაკვეთს რუკაზე — საზღვრები საჯარო რეესტრიდან ჩამოვა</span>
+            ) : mode === "point" ? (
               center
                 ? <>📍 მონიშნულია: <span className="mono">{center[0].toFixed(5)}, {center[1].toFixed(5)}</span></>
                 : <span className="muted">დააჭირე რუკაზე ობიექტის ადგილის მოსანიშნად</span>
@@ -191,9 +306,10 @@ export default function MapPicker({
 
           {mode === "polygon" && pts.length >= 3 && (
             <div className="warn" style={{ marginTop: 6 }}>
-              მითითებული ტერიტორია მიახლოებითია — საბოლოო ფართობს სპეციალისტი განსაზღვრავს.
+              ხელით მონიშნული ტერიტორია მიახლოებითია — საბოლოო ფართობს სპეციალისტი განსაზღვრავს.
             </div>
           )}
+          {seeking && <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>საჯარო რეესტრს ვეკითხები…</div>}
         </>
       )}
     </div>

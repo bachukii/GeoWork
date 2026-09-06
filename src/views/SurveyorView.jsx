@@ -73,6 +73,7 @@ export default function SurveyorView({ toast }) {
 
   return (
     <>
+      <div className="shell-body">
       {tab === "home" && (
         <div style={{ padding: 16 }}>
           {!profile.verified && (
@@ -135,6 +136,8 @@ export default function SurveyorView({ toast }) {
           <button className="btn2 btn-danger" style={{ marginTop: 14 }} onClick={signOut}>გასვლა</button>
         </div>
       )}
+
+      </div>
 
       <div className="nav">
         <button className={`navbtn ${tab === "home" ? "on" : ""}`} onClick={() => setTab("home")}><span className="ic">🏠</span>მთავარი</button>

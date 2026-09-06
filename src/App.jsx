@@ -5,6 +5,7 @@ import ClientView from "./views/ClientView";
 import SurveyorView from "./views/SurveyorView";
 import AdminView from "./views/AdminView";
 import { Spinner } from "./components/UI";
+import Logo from "./components/Logo";
 
 function Shell() {
   const { session, profile, loading, configured, signOut } = useAuth();
@@ -16,7 +17,7 @@ function Shell() {
 
   if (!configured) {
     return (
-      <div className="app">
+      <div className="app app-solo">
         <div style={{ padding: 24 }}>
           <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>GeoBid</div>
           <div className="err">Supabase არ არის დაკონფიგურირებული.</div>
@@ -33,15 +34,15 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
     );
   }
 
-  if (loading) return <div className="app"><Spinner /></div>;
+  if (loading) return <div className="app app-solo"><Spinner /></div>;
 
-  if (!session) return <div className="app"><AuthScreen /></div>;
+  if (!session) return <div className="app app-solo"><AuthScreen /></div>;
 
   // ავტორიზებულია, მაგრამ პროფილი არ არსებობს
   // (ხდება მაშინ, როცა email confirmation ჩართულია და პროფილი ვერ ჩაიწერა)
   if (!profile) {
     return (
-      <div className="app">
+      <div className="app app-solo">
         <div style={{ padding: 24 }}>
           <div className="warn" style={{ marginBottom: 12 }}>
             ანგარიში არსებობს, მაგრამ პროფილი ვერ მოიძებნა. ეს ხდება მაშინ, როცა
@@ -65,15 +66,12 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
     <div className="app">
       {toastMsg && <div className="toast">{toastMsg}</div>}
       <div className="hdr">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-          <div>
-            <h1>GeoBid</h1>
-            <div className="sub">{roleLabel}</div>
-          </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <Logo size={24} light sub={roleLabel} />
           <div className="who"><b>{profile.full_name}</b></div>
         </div>
       </div>
-      <div className="hazard" />
+      <div className="grid-band" />
 
       {profile.role === "client" && <ClientView toast={toast} />}
       {profile.role === "surveyor" && <SurveyorView toast={toast} />}

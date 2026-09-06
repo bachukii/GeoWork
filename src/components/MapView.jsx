@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { distance, fmtDistance, navUrl } from "../lib/geo";
+import { BASEMAPS, cadastreOverlay } from "../lib/basemaps";
+import LayerSwitch from "./LayerSwitch";
 
 const pinIcon = L.divIcon({
   className: "",
@@ -22,6 +24,11 @@ export default function MapView({ lat, lng, polygon, height = 240, label }) {
   const boxRef = useRef(null);
   const mapRef = useRef(null);
   const [dist, setDist] = useState(null);
+  const [base, setBase] = useState("osm");
+  const [cadastre, setCadastre] = useState(false);
+  const baseRef = useRef(null);
+  const underRef = useRef(null);
+  const cadRef = useRef(null);
 
   useEffect(() => {
     if (mapRef.current || !boxRef.current) return;
@@ -29,10 +36,6 @@ export default function MapView({ lat, lng, polygon, height = 240, label }) {
 
     const center = lat ? [lat, lng] : polygon[0];
     const map = L.map(boxRef.current, { center, zoom: 16 });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19, attribution: "© OpenStreetMap",
-    }).addTo(map);
-
     if (polygon?.length >= 3) {
       const poly = L.polygon(polygon, {
         color: "#0F1113", weight: 3, fillColor: "#E4FF1A", fillOpacity: 0.30,
@@ -61,6 +64,29 @@ export default function MapView({ lat, lng, polygon, height = 240, label }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // საბაზისო ფენა
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const cfg = BASEMAPS[base];
+    if (underRef.current) { map.removeLayer(underRef.current); underRef.current = null; }
+    if (baseRef.current)  { map.removeLayer(baseRef.current);  baseRef.current = null; }
+    if (cfg.under) {
+      underRef.current = BASEMAPS[cfg.under].make().addTo(map);
+      underRef.current.setZIndex(1);
+    }
+    baseRef.current = cfg.make().addTo(map);
+    baseRef.current.setZIndex(2);
+  }, [base]);
+
+  // საკადასტრო ფენა
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (cadRef.current) { map.removeLayer(cadRef.current); cadRef.current = null; }
+    if (cadastre) { cadRef.current = cadastreOverlay().addTo(map); cadRef.current.setZIndex(3); }
+  }, [cadastre]);
+
   if (!lat && !polygon?.length) {
     return <div className="card muted" style={{ fontSize: 12.5, textAlign: "center" }}>
       რუკაზე ადგილი მითითებული არ არის
@@ -69,7 +95,8 @@ export default function MapView({ lat, lng, polygon, height = 240, label }) {
 
   return (
     <div>
-      <div ref={boxRef} style={{ height, border: "1px solid var(--black)", zIndex: 1 }} />
+      <LayerSwitch base={base} setBase={setBase} cadastre={cadastre} setCadastre={setCadastre} />
+      <div ref={boxRef} style={{ height, zIndex: 1 }} />
       <div style={{ display: "flex", gap: 6, marginTop: 6, alignItems: "center", flexWrap: "wrap" }}>
         {lat && (
           <a className="btn2 btn-sm" href={navUrl(lat, lng)} target="_blank" rel="noreferrer"
