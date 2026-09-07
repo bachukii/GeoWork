@@ -18,6 +18,7 @@ export default function SurveyorView({ toast }) {
   const [myOrders, setMyOrders] = useState([]);
   const [stats, setStats] = useState(null);
   const [openId, setOpenId] = useState(null);
+  const [bidOrders, setBidOrders] = useState({});   // order_id -> order
 
   const load = useCallback(async () => {
     // ღია შეკვეთები — ფილტრი რეგიონსა და მომსახურებაზე
@@ -33,6 +34,14 @@ export default function SurveyorView({ toast }) {
     setFeed(open || []);
     setMyBids(bs || []);
     setStats(st);
+
+    // ჩემი ბიდების შეკვეთები — სახელის საჩვენებლად სიაში
+    const orderIds = [...new Set((bs || []).map((b) => b.order_id))];
+    if (orderIds.length) {
+      const { data: os } = await supabase.from("orders")
+        .select("id,num,service,place,status,due_at,selected_bid_id").in("id", orderIds);
+      setBidOrders(Object.fromEntries((os || []).map((o) => [o.id, o])));
+    } else setBidOrders({});
 
     // სამუშაოები სადაც ეს ამზომველია არჩეული
     const bidIds = (bs || []).map((b) => b.id);
@@ -123,8 +132,9 @@ export default function SurveyorView({ toast }) {
           {myBids.length === 0 ? <Empty t="შეთავაზება ჯერ არ გაგიგზავნია" /> : (
             <div className="col">
               {myBids.map((b) => {
-                const won = myOrders.find((o) => o.selected_bid_id === b.id);
-                const ord = won || feed?.find((o) => o.id === b.order_id);
+                const ord = bidOrders[b.order_id];
+                const won = ord && ord.selected_bid_id === b.id;
+                const lost = ord && ord.selected_bid_id && !won;
                 return (
                   <button key={b.id} className="card" style={{ textAlign: "left", width: "100%", cursor: "pointer" }}
                     onClick={() => setOpenId(b.order_id)}>
@@ -135,12 +145,12 @@ export default function SurveyorView({ toast }) {
                           {ord ? `#${ord.num} · ` : ""}{money(b.price)} · {b.days} დღე
                         </div>
                       </div>
-                      <span className={`pill ${won ? "s-done" : "s-open"}`}>
-                        {won ? "მოგებული" : "მოლოდინში"}
+                      <span className={`pill ${won ? "s-done" : lost ? "s-cancel" : "s-open"}`}>
+                        {won ? "მოგებული" : lost ? "ვერ მოიგე" : "მოლოდინში"}
                       </span>
                     </div>
-                    {won?.due_at && !["done", "rated", "cancel"].includes(won.status) && (
-                      <div style={{ marginTop: 8 }}><Countdown due={won.due_at} compact /></div>
+                    {won && ord?.due_at && !["done", "rated", "cancel"].includes(ord.status) && (
+                      <div style={{ marginTop: 8 }}><Countdown due={ord.due_at} compact /></div>
                     )}
                   </button>
                 );
@@ -243,10 +253,13 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
   const [form, setForm] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const [denied, setDenied] = useState(false);
+
   const load = useCallback(async () => {
     const { data: order } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
     setO(order);
-    if (!order) return;
+    if (!order) { setDenied(true); return; }
+    setDenied(false);
 
     // RLS-ის გამო აქ მხოლოდ ჩემი შეთავაზება დაბრუნდება — სხვისას ვერ წავიკითხავ
     const { data: mine } = await supabase.from("bids").select("*")
@@ -287,7 +300,12 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
 
   return (
     <Sheet title={o ? `შეკვეთა #${o.num}` : "შეკვეთა"} onClose={onClose}>
-      {!o ? <Spinner /> : (
+      {denied ? (
+        <div className="card" style={{ fontSize: 13.5 }}>
+          ამ შეკვეთის ნახვა ვეღარ შეგიძლია — დამკვეთმა სხვა ამზომველი აირჩია
+          ან შეკვეთა გაუქმდა.
+        </div>
+      ) : !o ? <Spinner /> : (
         <>
           <div style={{ marginBottom: 10 }}><Pill s={o.status} /></div>
 

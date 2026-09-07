@@ -7,6 +7,8 @@ import AdminView from "./views/AdminView";
 import { Spinner } from "./components/UI";
 import Logo from "./components/Logo";
 
+export const APP_VERSION = "v10.1";
+
 function Shell() {
   const { session, profile, loading, configured, signOut } = useAuth();
   const [toastMsg, setToastMsg] = useState("");
@@ -68,7 +70,7 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
       <div className="hdr">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
           <Logo size={24} light sub={roleLabel} />
-          <div className="who"><b>{profile.full_name}</b></div>
+          <div className="who"><b>{profile.full_name}</b><span className="mono" style={{ fontSize: 10, opacity: .55 }}>v10.1</span></div>
         </div>
       </div>
       <div className="grid-band" />
