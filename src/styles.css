@@ -221,7 +221,14 @@ body {
 @media (min-width: 900px) {
   body { background: #E8EAE7; }
 
-  .app {
+  /* შესვლამდელი ეკრანები — ერთი სვეტი, ცენტრში */
+  .app.app-solo {
+    display: block; max-width: 620px; padding-bottom: 0;
+    border-left: 1px solid var(--hair-2); border-right: 1px solid var(--hair-2);
+    min-height: 100vh;
+  }
+
+  .app:not(.app-solo) {
     max-width: var(--shell); padding-bottom: 0; min-height: 100vh;
     display: grid;
     grid-template-columns: var(--rail) 1fr;

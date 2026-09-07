@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import Icon from "./Icon";
 import { supabase } from "../lib/supabase";
 import { Empty, Spinner } from "./UI";
 import { dateOf } from "../lib/constants";

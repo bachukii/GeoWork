@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import Icon from "./Icon";
 import { supabase } from "../lib/supabase";
 import { timeOf } from "../lib/constants";
 

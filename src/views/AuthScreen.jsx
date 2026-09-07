@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Icon from "../components/Icon";
 import { useAuth } from "../context/AuthContext";
 import { REGIONS, ALL_SERVICES } from "../lib/constants";
 import Logo from "../components/Logo";
