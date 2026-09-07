@@ -31,10 +31,10 @@ export default function SurveyorProfile({ surveyorId, onClose }) {
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>
                   {p.full_name}{" "}
-                  {p.verified && <span style={{ color: "var(--field)", fontSize: 13 }}>✓ Verified</span>}
+                  {p.verified && <span style={{ color: "var(--field)", fontSize: 13 }}>Verified</span>}
                 </div>
                 <div className="muted" style={{ fontSize: 12.5 }}>
-                  {p.user_type === "company" ? "🏢 გეოდეზიური კომპანია" : "📐 გეოდეზისტი"}
+                  {p.user_type === "company" ? "გეოდეზიური კომპანია" : "გეოდეზისტი"}
                   {p.experience ? ` · ${p.experience} წელი` : ""}
                 </div>
               </div>

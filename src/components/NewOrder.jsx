@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import Icon from "./Icon";
 import { Sheet, Row } from "./UI";
 import MapPicker from "./MapPicker";
 import { SERVICE_GROUPS, REGIONS, DEADLINES, m2 } from "../lib/constants";
@@ -109,7 +110,7 @@ export default function NewOrder({ onClose, onPublish, busy }) {
           <input ref={fileRef} type="file" multiple accept="image/*,.pdf" style={{ display: "none" }}
             onChange={(e) => setPhotos((p) => [...p, ...Array.from(e.target.files).map((f) => f.name)])} />
           <button className="btn2" style={{ marginTop: 6 }} onClick={() => fileRef.current.click()}>
-            📷 ფოტოს / ფაილის დამატება
+            ფოტოს / ფაილის დამატება
           </button>
           {photos.length > 0 && (
             <div className="wrap" style={{ marginTop: 8 }}>
@@ -117,13 +118,13 @@ export default function NewOrder({ onClose, onPublish, busy }) {
                 <span key={i} className="pill" style={{ color: "var(--black)" }}>
                   {p.length > 18 ? p.slice(0, 16) + "…" : p}
                   <button style={{ background: "none", border: "none", color: "var(--survey)", cursor: "pointer" }}
-                    onClick={() => setPhotos((ph) => ph.filter((_, j) => j !== i))}>✕</button>
+                    onClick={() => setPhotos((ph) => ph.filter((_, j) => j !== i))}><Icon name="close" size={18} /></button>
                 </span>
               ))}
             </div>
           )}
           <div className="warn" style={{ marginTop: 8 }}>
-            ⚠️ ამჟამად ინახება მხოლოდ ფაილის სახელი. რეალური ატვირთვისთვის
+            ამჟამად ინახება მხოლოდ ფაილის სახელი. რეალური ატვირთვისთვის
             Supabase Storage bucket უნდა ჩაირთოს (README-ში წერია როგორ).
           </div>
 

@@ -32,14 +32,14 @@ export const SERVICE_GROUPS = {
 export const ALL_SERVICES = Object.values(SERVICE_GROUPS).flat();
 
 export const STATUS = {
-  open:       { label: "შეთავაზებების მოლოდინი", cls: "s-open",       icon: "○" },
-  selected:   { label: "ამზომველი არჩეულია",     cls: "s-selected",   icon: "◔" },
-  scheduled:  { label: "დაგეგმილია",              cls: "s-scheduled",  icon: "◑" },
-  inprogress: { label: "მიმდინარეობს",            cls: "s-inprogress", icon: "◕" },
-  processing: { label: "დამუშავება",              cls: "s-processing", icon: "◐" },
-  done:       { label: "დასრულებულია",            cls: "s-done",       icon: "●" },
-  rated:      { label: "შეფასებულია",             cls: "s-rated",      icon: "★" },
-  cancel:     { label: "გაუქმებული",              cls: "s-cancel",     icon: "✕" },
+  open:       { label: "შეთავაზებების მოლოდინი", cls: "s-open" },
+  selected:   { label: "ამზომველი არჩეულია",     cls: "s-selected" },
+  scheduled:  { label: "დაგეგმილია",              cls: "s-scheduled" },
+  inprogress: { label: "მიმდინარეობს",            cls: "s-inprogress" },
+  processing: { label: "დამუშავება",              cls: "s-processing" },
+  done:       { label: "დასრულებულია",            cls: "s-done" },
+  rated:      { label: "შეფასებულია",             cls: "s-rated" },
+  cancel:     { label: "გაუქმებული",              cls: "s-cancel" },
 };
 
 export const FLOW = ["open","selected","scheduled","inprogress","processing","done","rated"];

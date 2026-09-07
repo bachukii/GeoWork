@@ -67,7 +67,7 @@ function Landing({ onPick }) {
       <div style={{ padding: 18, maxWidth: 760, margin: "0 auto" }}>
         <div className="roles col">
           <div className="role-card">
-            <div className="glyph">🏗</div>
+            <div className="glyph"><Icon name="ruler" size={26} /></div>
             <h2>დამკვეთი ვარ</h2>
             <p>მჭირდება საკადასტრო, ტოპოგრაფიული ან შიდა აზომვა.</p>
             <button className="btn btn-go" onClick={() => onPick("reg-client")}>
@@ -76,7 +76,7 @@ function Landing({ onPick }) {
           </div>
 
           <div className="role-card">
-            <div className="glyph">📐</div>
+            <div className="glyph"><Icon name="ruler" size={26} /></div>
             <h2>ამზომველი ვარ</h2>
             <p>გეოდეზისტი ან კომპანია. ვიღებ შეკვეთებს ჩემს რეგიონში.</p>
             <button className="btn" onClick={() => onPick("reg-surveyor")}>
@@ -102,7 +102,7 @@ function Login({ onBack, onSubmit, busy, err }) {
   const [password, setPassword] = useState("");
   return (
     <div style={{ padding: 20 }}>
-      <button className="btn2 btn-sm" style={{ marginBottom: 18 }} onClick={onBack}>← უკან</button>
+      <button className="btn2 btn-sm" style={{ marginBottom: 18 }} onClick={onBack}>უკან</button>
       <div style={{ fontSize: 26, fontWeight: 900, marginBottom: 16, letterSpacing: "-0.02em" }}>შესვლა</div>
       {err && <div className="err">{err}</div>}
       <div className="lbl">ელფოსტა</div>
@@ -142,7 +142,7 @@ function Register({ role, onBack, onSubmit, busy, err, info }) {
 
   return (
     <div style={{ padding: 20 }}>
-      <button className="btn2 btn-sm" style={{ marginBottom: 16 }} onClick={onBack}>← უკან</button>
+      <button className="btn2 btn-sm" style={{ marginBottom: 16 }} onClick={onBack}>უკან</button>
       <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
         {isSurveyor ? "ამზომველის\nრეგისტრაცია" : "დამკვეთის\nრეგისტრაცია"}
       </div>

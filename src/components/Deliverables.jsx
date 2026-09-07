@@ -11,14 +11,15 @@ const fileSize = (b) => {
   return b < 1024 * 1024 ? `${Math.round(b / 1024)} KB` : `${(b / 1024 / 1024).toFixed(1)} MB`;
 };
 
-const iconFor = (name = "") => {
-  const e = name.split(".").pop()?.toLowerCase();
-  if (e === "pdf") return "📄";
-  if (["jpg", "jpeg", "png"].includes(e)) return "🖼";
-  if (["dwg", "dxf"].includes(e)) return "📐";
-  if (e === "zip") return "🗜";
-  return "📎";
-};
+// ფაილის ტიპი — ტექსტური ნიშანი, არა ემოჯი
+const extOf = (name = "") => (name.split(".").pop() || "").toUpperCase().slice(0, 4);
+
+const ExtTag = ({ name }) => (
+  <span className="mono" style={{
+    fontSize: 10, fontWeight: 600, padding: "2px 5px", borderRadius: 2,
+    background: "#EEF1EE", color: "var(--muted)", marginRight: 7,
+  }}>{extOf(name)}</span>
+);
 
 // ============ ამზომველის მხარე: ატვირთვა ============
 export function DeliverablesUpload({ orderId, meId, toast }) {
@@ -100,7 +101,7 @@ export function DeliverablesUpload({ orderId, meId, toast }) {
         onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
       <button className="btn2" style={{ marginTop: 6 }} disabled={busy}
         onClick={() => inputRef.current.click()}>
-        {busy ? "იტვირთება…" : "📤 ფაილის არჩევა"}
+        {busy ? "იტვირთება…" : "ფაილის არჩევა"}
       </button>
       <div className="muted" style={{ fontSize: 11.5, marginTop: 4 }}>
         PDF, JPG, PNG, DWG, DXF, ZIP · მაქს. {MAX_MB}MB
@@ -117,7 +118,7 @@ export function DeliverablesUpload({ orderId, meId, toast }) {
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: 13.5, wordBreak: "break-all" }}>
-                    {iconFor(f.file_name)} {f.file_name}
+                    <ExtTag name={f.file_name} />{f.file_name}
                   </div>
                   <div className="muted" style={{ fontSize: 11.5 }}>
                     {f.label} · {fileSize(f.file_size)} · {dateOf(f.created_at)}
@@ -171,7 +172,7 @@ export function DeliverablesDownload({ orderId, isPaid, toast }) {
   if (!isPaid) {
     return (
       <div className="card" style={{ textAlign: "center", padding: 20 }}>
-        <div style={{ fontSize: 26, marginBottom: 6 }}>🔒</div>
+        <div style={{ marginBottom: 8, color: "var(--muted)" }}><Icon name="lock" size={26} /></div>
         <div style={{ fontWeight: 600, fontSize: 14 }}>ფაილები დაბლოკილია</div>
         <div className="muted" style={{ fontSize: 12.5, marginTop: 4 }}>
           ნახაზები ხელმისაწვდომი გახდება გადახდის დადასტურების შემდეგ.
@@ -188,14 +189,14 @@ export function DeliverablesDownload({ orderId, isPaid, toast }) {
       {files.map((f) => (
         <div key={f.id} className="card tick">
           <div style={{ fontWeight: 600, fontSize: 13.5, wordBreak: "break-all" }}>
-            {iconFor(f.file_name)} {f.file_name}
+            <ExtTag name={f.file_name} />{f.file_name}
           </div>
           <div className="muted" style={{ fontSize: 11.5, marginBottom: 8 }}>
             {f.label} · {fileSize(f.file_size)} · {dateOf(f.created_at)}
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <button className="btn2 btn-sm" onClick={() => open(f, false)}>ნახვა</button>
-            <button className="btn btn-sm" onClick={() => open(f, f.file_name)}>⬇ ჩამოტვირთვა</button>
+            <button className="btn btn-sm" onClick={() => open(f, f.file_name)}>ჩამოტვირთვა</button>
           </div>
         </div>
       ))}

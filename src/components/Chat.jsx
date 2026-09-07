@@ -62,12 +62,12 @@ export default function Chat({ orderId, meId, place }) {
         <input className="inp" style={{ marginTop: 0 }} value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send(text)} placeholder="შეტყობინება…" />
-        <button className="btn btn-sm" onClick={() => send(text)}>➤</button>
+        <button className="btn btn-sm" onClick={() => send(text)} aria-label="გაგზავნა"><Icon name="check" size={16} /></button>
       </div>
       <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-        <button className="btn2 btn-sm" onClick={() => send(`📍 ლოკაცია: ${place}`)}>📍 ლოკაცია</button>
-        <button className="btn2 btn-sm" onClick={() => send("📷 ფოტო გაზიარებულია")}>📷 ფოტო</button>
-        <button className="btn2 btn-sm" onClick={() => send("📄 დოკუმენტი გაზიარებულია")}>📄 ფაილი</button>
+        <button className="btn2 btn-sm" onClick={() => send(`ლოკაცია: ${place}`)}><Icon name="pin" size={14} /> ლოკაცია</button>
+        <button className="btn2 btn-sm" onClick={() => send("ფოტო გაზიარებულია")}><Icon name="camera" size={14} /> ფოტო</button>
+        <button className="btn2 btn-sm" onClick={() => send("დოკუმენტი გაზიარებულია")}><Icon name="folder" size={14} /> ფაილი</button>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import Icon from "../components/Icon";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Pill, Row, Empty, Stars, Spinner } from "../components/UI";
@@ -100,7 +101,7 @@ export default function AdminView({ toast }) {
                 </div>
                 <button className="btn btn-sm"
                   style={{ background: p.verified ? "var(--field)" : "var(--safety)", whiteSpace: "nowrap" }}
-                  onClick={() => toggleVerify(p)}>{p.verified ? "✓ Verified" : "ვერიფიკაცია"}</button>
+                  onClick={() => toggleVerify(p)}>{p.verified ? "Verified" : "ვერიფიკაცია"}</button>
               </div>
             );
           })}
@@ -184,11 +185,11 @@ export default function AdminView({ toast }) {
       </div>
 
       <div className="nav">
-        <button className={`navbtn ${tab === "stats" ? "on" : ""}`} onClick={() => setTab("stats")}><span className="ic">📊</span>სტატისტიკა</button>
-        <button className={`navbtn ${tab === "users" ? "on" : ""}`} onClick={() => setTab("users")}><span className="ic">👥</span>მომხმარებლები</button>
-        <button className={`navbtn ${tab === "orders" ? "on" : ""}`} onClick={() => setTab("orders")}><span className="ic">📋</span>შეკვეთები</button>
-        <button className={`navbtn ${tab === "payments" ? "on" : ""}`} onClick={() => setTab("payments")}><span className="ic">💳</span>გადახდები</button>
-        <button className={`navbtn ${tab === "complaints" ? "on" : ""}`} onClick={() => setTab("complaints")}><span className="ic">🚨</span>საჩივრები</button>
+        <button className={`navbtn ${tab === "stats" ? "on" : ""}`} onClick={() => setTab("stats")}><Icon name="chart" />სტატისტიკა</button>
+        <button className={`navbtn ${tab === "users" ? "on" : ""}`} onClick={() => setTab("users")}><Icon name="users" />მომხმარებლები</button>
+        <button className={`navbtn ${tab === "orders" ? "on" : ""}`} onClick={() => setTab("orders")}><Icon name="doc" />შეკვეთები</button>
+        <button className={`navbtn ${tab === "payments" ? "on" : ""}`} onClick={() => setTab("payments")}><Icon name="money" />გადახდები</button>
+        <button className={`navbtn ${tab === "complaints" ? "on" : ""}`} onClick={() => setTab("complaints")}><Icon name="alert" />საჩივრები</button>
       </div>
     </>
   );

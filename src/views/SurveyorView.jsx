@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import Icon from "../components/Icon";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Pill, Row, Empty, Stars, Sheet, Spinner } from "../components/UI";
@@ -65,7 +66,7 @@ export default function SurveyorView({ toast }) {
         </div>
         <div style={{ fontWeight: 700 }}>{o.service}</div>
         <div className="muted" style={{ fontSize: 12.5 }}>
-          📍 {o.place} · {m2(o.area)} · 📷 {(o.photos || []).length} · ⏱ {o.deadline}
+          {o.place} · {m2(o.area)} · {(o.photos || []).length} · ⏱ {o.deadline}
         </div>
       </button>
     );
@@ -78,7 +79,7 @@ export default function SurveyorView({ toast }) {
         <div style={{ padding: 16 }}>
           {!profile.verified && (
             <div className="warn" style={{ marginBottom: 12 }}>
-              ⏳ პროფილი ვერიფიკაციის მოლოდინშია. შეთავაზებების გაგზავნა შეგიძლია,
+              პროფილი ვერიფიკაციის მოლოდინშია. შეთავაზებების გაგზავნა შეგიძლია,
               მაგრამ „Verified ✓" ნიშანი ჯერ არ გაქვს.
             </div>
           )}
@@ -140,12 +141,12 @@ export default function SurveyorView({ toast }) {
       </div>
 
       <div className="nav">
-        <button className={`navbtn ${tab === "home" ? "on" : ""}`} onClick={() => setTab("home")}><span className="ic">🏠</span>მთავარი</button>
+        <button className={`navbtn ${tab === "home" ? "on" : ""}`} onClick={() => setTab("home")}><Icon name="home" />მთავარი</button>
         <button className={`navbtn ${tab === "feed" ? "on" : ""}`} onClick={() => setTab("feed")}>
-          <span className="ic">📢</span>შეკვეთები{feed?.length ? ` (${feed.length})` : ""}
+          <Icon name="feed" />შეკვეთები{feed?.length ? ` (${feed.length})` : ""}
         </button>
-        <button className={`navbtn ${tab === "jobs" ? "on" : ""}`} onClick={() => setTab("jobs")}><span className="ic">📐</span>სამუშაოები</button>
-        <button className={`navbtn ${tab === "profile" ? "on" : ""}`} onClick={() => setTab("profile")}><span className="ic">👤</span>პროფილი</button>
+        <button className={`navbtn ${tab === "jobs" ? "on" : ""}`} onClick={() => setTab("jobs")}><Icon name="ruler" />სამუშაოები</button>
+        <button className={`navbtn ${tab === "profile" ? "on" : ""}`} onClick={() => setTab("profile")}><Icon name="user" />პროფილი</button>
       </div>
 
       {openId && <OrderSheet orderId={openId} me={profile} toast={toast}
@@ -172,11 +173,11 @@ function ProfileEditor({ profile, stats, onSave, toast }) {
         <div style={{ fontWeight: 700, fontSize: 16 }}>
           {profile.full_name}{" "}
           {profile.verified
-            ? <span style={{ color: "var(--field)", fontSize: 13 }}>✓ Verified</span>
-            : <span style={{ color: "var(--safety)", fontSize: 12 }}>⏳ ვერიფიკაცია მოლოდინში</span>}
+            ? <span style={{ color: "var(--field)", fontSize: 13 }}>Verified</span>
+            : <span style={{ color: "var(--safety)", fontSize: 12 }}>ვერიფიკაცია მოლოდინში</span>}
         </div>
         <div className="muted" style={{ fontSize: 12.5 }}>
-          {profile.user_type === "company" ? "🏢 კომპანია" : "📐 გეოდეზისტი"} · {profile.experience} წელი · {profile.phone}
+          {profile.user_type === "company" ? "კომპანია" : "გეოდეზისტი"} · {profile.experience} წელი · {profile.phone}
         </div>
         <div style={{ marginTop: 6 }}>
           <Stars v={stats?.avg_rating} /> {Number(stats?.avg_rating || 0).toFixed(1)} · {stats?.completed_jobs ?? 0} სამუშაო
@@ -282,7 +283,7 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
 
           {(o.lat || o.polygon) && (
             <div style={{ marginBottom: 10 }}>
-              <div className="lbl" style={{ marginBottom: 4 }}>🗺️ სამუშაოს ადგილი</div>
+              <div className="lbl" style={{ marginBottom: 4 }}>სამუშაოს ადგილი</div>
               <MapView lat={o.lat} lng={o.lng} polygon={o.polygon} height={220} />
             </div>
           )}
@@ -297,7 +298,7 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 5, marginBottom: 10 }}>
               {o.photos.map((p, i) => (
                 <div key={i} style={{ aspectRatio: "1", background: "#C4C7C0", border: "1px solid var(--black)",
-                  fontSize: 9, padding: 3, overflow: "hidden", color: "var(--graphite)" }}>📷 {p}</div>
+                  fontSize: 9, padding: 3, overflow: "hidden", color: "var(--graphite)" }}>{p}</div>
               ))}
             </div>
           )}
@@ -312,7 +313,7 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                 {myBid.comment && <div style={{ fontSize: 13, fontStyle: "italic" }}>„{myBid.comment}"</div>}
                 <div className="hl" />
                 <div className="muted" style={{ fontSize: 12 }}>
-                  🔒 სხვა შეთავაზება: {othersCount} — ფასები დახურულია. სერვერი ვერავის აძლევს
+                  სხვა შეთავაზება: {othersCount} — ფასები დახურულია. სერვერი ვერავის აძლევს
                   სხვისი ფასის წაკითხვის უფლებას, მხოლოდ დამკვეთი ხედავს ყველას.
                 </div>
               </div>
@@ -321,7 +322,7 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
             ) : (
               <>
                 <div className="card" style={{ marginBottom: 10, fontSize: 12.5 }} >
-                  🔒 ამ შეკვეთაზე უკვე გაგზავნილია <b>{othersCount}</b> შეთავაზება.
+                  ამ შეკვეთაზე უკვე გაგზავნილია <b>{othersCount}</b> შეთავაზება.
                   მათ ფასებს ვერ ხედავ — და ვერც ისინი ხედავენ შენსას.
                   შეაფასე საკუთარი გამოცდილებით.
                 </div>
@@ -348,7 +349,7 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                 </div>
               </div>
 
-              <div className="lbl" style={{ marginBottom: 4 }}>📁 ნახაზის მიწოდება</div>
+              <div className="lbl" style={{ marginBottom: 4 }}>ნახაზის მიწოდება</div>
               <div className="card" style={{ marginBottom: 12 }}>
                 <DeliverablesUpload orderId={orderId} meId={me.id} toast={toast} />
               </div>
@@ -364,7 +365,7 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                 </div>
               )}
 
-              <div className="lbl" style={{ marginBottom: 4 }}>💬 ჩატი — {client?.full_name}</div>
+              <div className="lbl" style={{ marginBottom: 4 }}>ჩატი — {client?.full_name}</div>
               <div className="card"><Chat orderId={orderId} meId={me.id} place={o.place} /></div>
             </>
           )}

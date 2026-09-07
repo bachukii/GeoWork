@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import Icon from "../components/Icon";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { Pill, Row, Empty, Stars, Sheet, Spinner } from "../components/UI";
@@ -67,7 +68,7 @@ export default function ClientView({ toast }) {
           <div className="card tick">
             <div style={{ fontWeight: 700, fontSize: 16 }}>{profile.full_name}</div>
             <div className="muted" style={{ fontSize: 13 }}>
-              {profile.user_type === "company" ? "🏢 კომპანია" : "👤 ფიზიკური პირი"} · {profile.phone}
+              {profile.user_type === "company" ? "კომპანია" : "ფიზიკური პირი"} · {profile.phone}
             </div>
             <div className="hl" />
             <Row l="სულ შეკვეთა" v={(orders || []).length} mono />
@@ -81,13 +82,13 @@ export default function ClientView({ toast }) {
 
       <div className="nav">
         <button className={`navbtn ${tab === "orders" ? "on" : ""}`} onClick={() => setTab("orders")}>
-          <span className="ic">📋</span>ჩემი შეკვეთები
+          <Icon name="doc" />ჩემი შეკვეთები
         </button>
         <button className="navbtn" onClick={() => setShowNew(true)}>
-          <span className="ic">＋</span>შეკვეთა
+          <Icon name="plus" />შეკვეთა
         </button>
         <button className={`navbtn ${tab === "profile" ? "on" : ""}`} onClick={() => setTab("profile")}>
-          <span className="ic">👤</span>პროფილი
+          <Icon name="user" />პროფილი
         </button>
       </div>
 
@@ -113,7 +114,7 @@ function OrderCard({ o, onOpen }) {
         <Pill s={o.status} />
       </div>
       <div style={{ fontWeight: 700 }}>{o.service}</div>
-      <div className="muted" style={{ fontSize: 12.5 }}>📍 {o.place} · {m2(o.area)}</div>
+      <div className="muted" style={{ fontSize: 12.5 }}>{o.place} · {m2(o.area)}</div>
       {o.selected_bid_id && (
         <div style={{ marginTop: 5 }}><PayPill s={o.payment_status || "unpaid"} /></div>
       )}
@@ -184,6 +185,33 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
     toast("შეფასება გაიგზავნა"); load(); onChanged();
   };
 
+  const removeOrder = async () => {
+    if (!confirm("შეკვეთა სამუდამოდ წაიშლება. გავაგრძელო?")) return;
+    setBusy(true);
+    const { error } = await supabase.from("orders").delete().eq("id", orderId);
+    setBusy(false);
+    if (error) { toast("წაშლა ვერ მოხერხდა"); return; }
+    toast("შეკვეთა წაიშალა");
+    onChanged(); onClose();
+  };
+
+  const cancelOrder = async () => {
+    if (!confirm("შეკვეთა გაუქმდება. გავაგრძელო?")) return;
+    setBusy(true);
+    const { error } = await supabase.from("orders").update({ status: "cancel" }).eq("id", orderId);
+    setBusy(false);
+    if (error) { toast("ვერ გაუქმდა"); return; }
+    toast("შეკვეთა გაუქმდა"); load(); onChanged();
+  };
+
+  const markDone = async () => {
+    setBusy(true);
+    const { error } = await supabase.from("orders").update({ status: "done" }).eq("id", orderId);
+    setBusy(false);
+    if (error) { toast("ვერ დასრულდა"); return; }
+    toast("სამუშაო დასრულებულად მოინიშნა"); load(); onChanged();
+  };
+
   const complain = async (kind) => {
     const { error } = await supabase.from("complaints")
       .insert({ order_id: orderId, by_id: me.id, kind });
@@ -210,7 +238,7 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
 
           {(o.lat || o.polygon) && (
             <div style={{ marginBottom: 10 }}>
-              <div className="lbl" style={{ marginBottom: 4 }}>🗺️ ადგილმდებარეობა</div>
+              <div className="lbl" style={{ marginBottom: 4 }}>ადგილმდებარეობა</div>
               <MapView lat={o.lat} lng={o.lng} polygon={o.polygon} height={200} />
             </div>
           )}
@@ -246,6 +274,16 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                   </div>
                 );
               })}
+
+              <div className="hl" />
+              <button className="btn2 btn-danger" disabled={busy} onClick={removeOrder}>
+                შეკვეთის წაშლა
+              </button>
+              <div className="muted" style={{ fontSize: 11.5, marginTop: 6 }}>
+                {bids.length > 0
+                  ? `წაშლისას ${bids.length} შეთავაზებაც წაიშლება.`
+                  : "შეკვეთა ჯერ არავის აურჩევია — უსაფრთხოდ იშლება."}
+              </div>
             </>
           )}
 
@@ -279,11 +317,18 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                     onChanged={() => { load(); onChanged(); }} />
                 </div>
 
-                <div className="lbl" style={{ marginBottom: 4 }}>📁 ნახაზები და დოკუმენტები</div>
+                <div className="lbl" style={{ marginBottom: 4 }}>ნახაზები და დოკუმენტები</div>
                 <div style={{ marginBottom: 12 }}>
                   <DeliverablesDownload orderId={orderId}
                     isPaid={o.payment_status === "confirmed"} toast={toast} />
                 </div>
+
+                {["scheduled", "inprogress", "processing"].includes(o.status) && (
+                  <button className="btn btn-go" style={{ marginBottom: 10 }}
+                    disabled={busy} onClick={markDone}>
+                    სამუშაო დასრულებულად მონიშვნა
+                  </button>
+                )}
 
                 {o.status === "done" && !rated && (
                   <RateForm who={p?.full_name} busy={busy} onSubmit={submitRating} />
@@ -294,12 +339,12 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                   </div>
                 )}
 
-                <div className="lbl" style={{ marginTop: 12, marginBottom: 4 }}>💬 ჩატი — {p?.full_name}</div>
+                <div className="lbl" style={{ marginTop: 12, marginBottom: 4 }}>ჩატი — {p?.full_name}</div>
                 <div className="card"><Chat orderId={orderId} meId={me.id} place={o.place} /></div>
 
                 {!["rated", "cancel"].includes(o.status) && (
                   <button className="btn2 btn-sm btn-danger" style={{ marginTop: 12 }}
-                    onClick={() => setComplaining(true)}>🚨 პრობლემის შეტყობინება</button>
+                    onClick={() => setComplaining(true)}>პრობლემის შეტყობინება</button>
                 )}
                 {complaining && (
                   <div className="card" style={{ marginTop: 8 }}>

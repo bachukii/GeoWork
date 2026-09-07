@@ -24,8 +24,8 @@ export default function MapView({ lat, lng, polygon, height = 240, label }) {
   const boxRef = useRef(null);
   const mapRef = useRef(null);
   const [dist, setDist] = useState(null);
-  const [base, setBase] = useState("osm");
-  const [cadastre, setCadastre] = useState(false);
+  const [base, setBase] = useState("sat");
+  const [cadastre, setCadastre] = useState(true);
   const baseRef = useRef(null);
   const underRef = useRef(null);
   const cadRef = useRef(null);
@@ -100,10 +100,10 @@ export default function MapView({ lat, lng, polygon, height = 240, label }) {
       <div style={{ display: "flex", gap: 6, marginTop: 6, alignItems: "center", flexWrap: "wrap" }}>
         {lat && (
           <a className="btn2 btn-sm" href={navUrl(lat, lng)} target="_blank" rel="noreferrer"
-            style={{ textDecoration: "none", display: "inline-block" }}>🧭 ნავიგაცია</a>
+            style={{ textDecoration: "none", display: "inline-block" }}>ნავიგაცია</a>
         )}
         {dist !== null && (
-          <span className="pill s-selected">🚗 {fmtDistance(dist)}</span>
+          <span className="pill s-selected">{fmtDistance(dist)}</span>
         )}
         {label && <span className="muted" style={{ fontSize: 12 }}>{label}</span>}
       </div>

@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { polygonArea, centroid } from "../lib/geo";
 import { BASEMAPS, cadastreOverlay } from "../lib/basemaps";
 import LayerSwitch from "./LayerSwitch";
-import { lookupByCode, identifyAt, codeFromProps } from "../lib/napr";
+import { lookupByCode, identifyAt, codeFromProps, reasonText, isValidCode } from "../lib/napr";
 import { m2 } from "../lib/constants";
 
 // ნაგულისხმევი ცენტრი — თბილისი
@@ -44,8 +44,8 @@ export default function MapPicker({
   const vertexLayerRef = useRef(null);
 
   const [mode, setMode] = useState("parcel"); // parcel | point | polygon
-  const [base, setBase] = useState("osm");
-  const [cadastre, setCadastre] = useState(false);
+  const [base, setBase] = useState("sat");
+  const [cadastre, setCadastre] = useState(true);
   const baseRef = useRef(null);
   const underRef = useRef(null);
   const cadRef = useRef(null);
@@ -131,7 +131,7 @@ export default function MapPicker({
           if (r.ok) {
             applyParcel(r.parcel);
           } else {
-            setNote({ kind: "warn", text: "ამ ადგილას რეგისტრირებული ნაკვეთი ვერ მოიძებნა." });
+            setNote({ kind: "warn", text: reasonText[r.reason] || reasonText.service });
           }
         } catch { /* გაუქმებული */ }
         setSeeking(false);
@@ -187,10 +187,7 @@ export default function MapPicker({
     try {
       const r = await lookupByCode(code);
       if (r.ok) applyParcel(r.parcel);
-      else setNote({
-        kind: "warn",
-        text: "ამ კოდით ნაკვეთი ვერ მოიძებნა. მონიშნე რუკაზე დაჭერით ან დახაზე კონტური.",
-      });
+      else setNote({ kind: "warn", text: reasonText[r.reason] || reasonText.service });
     } catch { /* ignore */ }
     setSeeking(false);
   }, [code, applyParcel]);
@@ -229,9 +226,9 @@ export default function MapPicker({
       {!readOnly && (
         <div className="grid2" style={{ marginBottom: 8 }}>
           <button className={`chip ${mode === "point" ? "on" : ""}`}
-            onClick={() => setMode("point")}>📍 წერტილი</button>
+            onClick={() => setMode("point")}>წერტილი</button>
           <button className={`chip ${mode === "polygon" ? "on" : ""}`}
-            onClick={() => setMode("polygon")}>⬡ ნაკვეთის კონტური</button>
+            onClick={() => setMode("polygon")}>ნაკვეთის კონტური</button>
         </div>
       )}
 
@@ -248,7 +245,7 @@ export default function MapPicker({
 
           {mode === "parcel" && code && (
             <button className="btn btn-sm" style={{ width: "100%", marginBottom: 7 }}
-              disabled={seeking} onClick={seekCode}>
+              disabled={seeking || !isValidCode(code)} onClick={seekCode}>
               {seeking ? "იძებნება…" : `კოდით პოვნა — ${code}`}
             </button>
           )}
@@ -270,12 +267,12 @@ export default function MapPicker({
         <>
           <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
             <button className="btn2 btn-sm" onClick={locate} disabled={locating}>
-              {locating ? "…" : "🧭 ჩემი ადგილი"}
+              {locating ? "…" : "ჩემი ადგილი"}
             </button>
             {mode === "polygon" && (
               <>
                 <button className="btn2 btn-sm" onClick={() => setPts((p) => p.slice(0, -1))}
-                  disabled={!pts.length}>↶ ბოლო წერტილი</button>
+                  disabled={!pts.length}>ბოლო წერტილი</button>
                 <button className="btn2 btn-sm" onClick={() => setPts([])}
                   disabled={!pts.length}>გასუფთავება</button>
               </>
@@ -291,15 +288,15 @@ export default function MapPicker({
           <div className="card" style={{ marginTop: 8, fontSize: 12.5 }}>
             {mode === "parcel" ? (
               pts.length >= 3
-                ? <>⬡ ნაკვეთი მონიშნულია · <b className="mono">≈ {m2(Math.round(area))}</b></>
+                ? <>ნაკვეთი მონიშნულია · <b className="mono">≈ {m2(Math.round(area))}</b></>
                 : <span className="muted">დააჭირე ნაკვეთს რუკაზე — საზღვრები საჯარო რეესტრიდან ჩამოვა</span>
             ) : mode === "point" ? (
               center
-                ? <>📍 მონიშნულია: <span className="mono">{center[0].toFixed(5)}, {center[1].toFixed(5)}</span></>
+                ? <>მონიშნულია: <span className="mono">{center[0].toFixed(5)}, {center[1].toFixed(5)}</span></>
                 : <span className="muted">დააჭირე რუკაზე ობიექტის ადგილის მოსანიშნად</span>
             ) : (
               pts.length >= 3
-                ? <>⬡ {pts.length} წერტილი · <b className="mono">≈ {m2(Math.round(area))}</b></>
+                ? <>{pts.length} წერტილი · <b className="mono">≈ {m2(Math.round(area))}</b></>
                 : <span className="muted">დააჭირე რუკაზე ნაკვეთის კუთხეების მოსანიშნად (მინ. 3)</span>
             )}
           </div>

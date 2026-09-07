@@ -79,9 +79,9 @@ export default function Payment({ order, amount, meId, toast, onChanged }) {
           </div>
         ) : (
           <>
-            <button className="btn" onClick={() => setForm(true)}>💳 გადავიხადე — დადასტურება</button>
+            <button className="btn" onClick={() => setForm(true)}>გადავიხადე — დადასტურება</button>
             <div className="warn" style={{ marginTop: 8 }}>
-              ⚠️ ონლაინ გადახდა (ბარათით) ჯერ არ არის ჩართული. ამჟამად თანხას გადარიცხავ
+              ონლაინ გადახდა (ბარათით) ჯერ არ არის ჩართული. ამჟამად თანხას გადარიცხავ
               პირდაპირ, აქ კი აფიქსირებ ტრანზაქციის ნომერს — ადმინისტრატორი დაადასტურებს
               და ფაილები განიბლოკება.
             </div>
@@ -91,14 +91,14 @@ export default function Payment({ order, amount, meId, toast, onChanged }) {
 
       {st === "pending" && (
         <div className="card" style={{ fontSize: 13 }}>
-          ◐ გადახდა გაგზავნილია დასადასტურებლად. ადმინისტრატორის დადასტურების შემდეგ
+          გადახდა გაგზავნილია დასადასტურებლად. ადმინისტრატორის დადასტურების შემდეგ
           ნახაზები ავტომატურად გამოჩნდება.
         </div>
       )}
 
       {st === "confirmed" && (
         <div className="card" style={{ fontSize: 13, color: "var(--field)" }}>
-          ✓ გადახდა დადასტურებულია — ფაილები ხელმისაწვდომია.
+          გადახდა დადასტურებულია — ფაილები ხელმისაწვდომია.
         </div>
       )}
 
@@ -168,7 +168,7 @@ export function PaymentsAdmin({ toast }) {
           </div>
           {p.status === "pending" && (
             <button className="btn btn-sm" style={{ marginTop: 8, width: "100%" }}
-              onClick={() => confirm(p)}>✓ დადასტურება</button>
+              onClick={() => confirm(p)}>დადასტურება</button>
           )}
         </div>
       ))}

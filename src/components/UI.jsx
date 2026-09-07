@@ -1,4 +1,5 @@
 import React from "react";
+import Icon from "./Icon";
 import { STATUS } from "../lib/constants";
 
 export const Pill = ({ s }) => {
@@ -37,7 +38,7 @@ export function Sheet({ title, onClose, children }) {
         <div className="hazard" />
         <div className="sheet-hdr">
           <span className="t">{title}</span>
-          <button onClick={onClose} aria-label="დახურვა">✕</button>
+          <button onClick={onClose} aria-label="დახურვა"><Icon name="close" size={20} /></button>
         </div>
         <div className="sheet-inner">{children}</div>
       </div>
