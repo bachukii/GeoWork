@@ -1,10 +1,11 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import Icon from "./Icon";
 import { Sheet, Row } from "./UI";
 import MapPicker from "./MapPicker";
+import { PhotoUpload } from "./Photos";
 import { SERVICE_GROUPS, REGIONS, DEADLINES, m2 } from "../lib/constants";
 
-export default function NewOrder({ onClose, onPublish, busy }) {
+export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
   const [step, setStep] = useState(1);
   const [cat, setCat] = useState(null);
   const [svc, setSvc] = useState(null);
@@ -14,10 +15,10 @@ export default function NewOrder({ onClose, onPublish, busy }) {
   const [region, setRegion] = useState(REGIONS[0]);
   const [addr, setAddr] = useState("");
   const [photos, setPhotos] = useState([]);
+  const [folderId] = useState(() => crypto.randomUUID());
   const [desc, setDesc] = useState("");
   const [dl, setDl] = useState(DEADLINES[1]);
   const [dlDate, setDlDate] = useState("");
-  const fileRef = useRef();
 
   const onGeo = useCallback((g) => {
     setGeo((prev) => ({ ...g, fromParcel: prev.fromParcel }));
@@ -107,26 +108,8 @@ export default function NewOrder({ onClose, onPublish, busy }) {
           <div className="hl" />
 
           <div className="lbl">ფოტოები და დოკუმენტები</div>
-          <input ref={fileRef} type="file" multiple accept="image/*,.pdf" style={{ display: "none" }}
-            onChange={(e) => setPhotos((p) => [...p, ...Array.from(e.target.files).map((f) => f.name)])} />
-          <button className="btn2" style={{ marginTop: 6 }} onClick={() => fileRef.current.click()}>
-            ფოტოს / ფაილის დამატება
-          </button>
-          {photos.length > 0 && (
-            <div className="wrap" style={{ marginTop: 8 }}>
-              {photos.map((p, i) => (
-                <span key={i} className="pill" style={{ color: "var(--black)" }}>
-                  {p.length > 18 ? p.slice(0, 16) + "…" : p}
-                  <button style={{ background: "none", border: "none", color: "var(--survey)", cursor: "pointer" }}
-                    onClick={() => setPhotos((ph) => ph.filter((_, j) => j !== i))}><Icon name="close" size={18} /></button>
-                </span>
-              ))}
-            </div>
-          )}
-          <div className="warn" style={{ marginTop: 8 }}>
-            ამჟამად ინახება მხოლოდ ფაილის სახელი. რეალური ატვირთვისთვის
-            Supabase Storage bucket უნდა ჩაირთოს (README-ში წერია როგორ).
-          </div>
+          <PhotoUpload ownerId={ownerId} folderId={folderId}
+            value={photos} onChange={setPhotos} />
 
           <div className="lbl" style={{ marginTop: 14 }}>დამატებითი ინფორმაცია</div>
           <textarea className="inp" rows={3} value={desc} onChange={(e) => setDesc(e.target.value)}

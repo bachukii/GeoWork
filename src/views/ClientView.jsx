@@ -10,6 +10,7 @@ import SurveyorProfile from "../components/SurveyorProfile";
 import MapView from "../components/MapView";
 import Payment, { PayPill } from "../components/Payment";
 import Countdown from "../components/Countdown";
+import { PhotoGrid } from "../components/Photos";
 import { DeliverablesDownload } from "../components/Deliverables";
 import { money, m2, FLOW, STATUS, COMPLAINT_KINDS } from "../lib/constants";
 
@@ -93,7 +94,7 @@ export default function ClientView({ toast }) {
         </button>
       </div>
 
-      {showNew && <NewOrder busy={busy} onClose={() => setShowNew(false)} onPublish={publish} />}
+      {showNew && <NewOrder busy={busy} ownerId={profile.id} onClose={() => setShowNew(false)} onPublish={publish} />}
       {openId && <OrderSheet orderId={openId} me={profile} toast={toast}
         onClose={() => { setOpenId(null); load(); }} onChanged={load} />}
     </>
@@ -246,6 +247,13 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
             <Row l="სასურველი ვადა" v={o.deadline} />
             <Row l="ფოტოები" v={(o.photos || []).length} mono />
           </div>
+
+          {(o.photos || []).length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <div className="lbl" style={{ marginBottom: 6 }}>ფოტოები</div>
+              <PhotoGrid paths={o.photos} />
+            </div>
+          )}
 
           {(o.lat || o.polygon) && (
             <div style={{ marginBottom: 10 }}>

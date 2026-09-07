@@ -8,6 +8,7 @@ import MapView from "../components/MapView";
 import { DeliverablesUpload } from "../components/Deliverables";
 import { PayPill } from "../components/Payment";
 import Countdown from "../components/Countdown";
+import { PhotoGrid } from "../components/Photos";
 import { money, m2, FLOW, STATUS, REGIONS, ALL_SERVICES } from "../lib/constants";
 
 export default function SurveyorView({ toast }) {
@@ -332,11 +333,12 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
           )}
 
           {(o.photos || []).length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 5, marginBottom: 10 }}>
-              {o.photos.map((p, i) => (
-                <div key={i} style={{ aspectRatio: "1", background: "#C4C7C0", border: "1px solid var(--black)",
-                  fontSize: 9, padding: 3, overflow: "hidden", color: "var(--graphite)" }}>{p}</div>
-              ))}
+            <div style={{ marginBottom: 12 }}>
+              <div className="lbl" style={{ marginBottom: 6 }}>დამკვეთის ფოტოები</div>
+              <PhotoGrid paths={o.photos} />
+              <div className="muted" style={{ fontSize: 11.5, marginTop: 5 }}>
+                დააჭირე გასადიდებლად
+              </div>
             </div>
           )}
 
