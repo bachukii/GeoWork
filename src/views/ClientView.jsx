@@ -9,6 +9,7 @@ import RateForm from "../components/RateForm";
 import SurveyorProfile from "../components/SurveyorProfile";
 import MapView from "../components/MapView";
 import Payment, { PayPill } from "../components/Payment";
+import Countdown from "../components/Countdown";
 import { DeliverablesDownload } from "../components/Deliverables";
 import { money, m2, FLOW, STATUS, COMPLAINT_KINDS } from "../lib/constants";
 
@@ -116,7 +117,12 @@ function OrderCard({ o, onOpen }) {
       <div style={{ fontWeight: 700 }}>{o.service}</div>
       <div className="muted" style={{ fontSize: 12.5 }}>{o.place} · {m2(o.area)}</div>
       {o.selected_bid_id && (
-        <div style={{ marginTop: 5 }}><PayPill s={o.payment_status || "unpaid"} /></div>
+        <div className="wrap" style={{ marginTop: 7 }}>
+          <PayPill s={o.payment_status || "unpaid"} />
+          {o.due_at && !["done", "rated", "cancel"].includes(o.status) && (
+            <Countdown due={o.due_at} compact />
+          )}
+        </div>
       )}
       {o.status === "open" && bidCount !== null && (
         <div style={{ fontSize: 12.5, marginTop: 4, color: "var(--safety)", fontWeight: 600 }}>
@@ -164,8 +170,13 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
 
   const choose = async (bid) => {
     setBusy(true);
+    const start = new Date();
+    const due = new Date(start.getTime() + (Number(bid.days) || 1) * 86400000);
     const { error } = await supabase.from("orders")
-      .update({ selected_bid_id: bid.id, status: "selected" }).eq("id", orderId);
+      .update({
+        selected_bid_id: bid.id, status: "selected",
+        started_at: start.toISOString(), due_at: due.toISOString(),
+      }).eq("id", orderId);
     setBusy(false);
     if (error) { toast("არჩევა ვერ მოხერხდა"); return; }
     toast(`${profMap[bid.surveyor_id]?.full_name || "ამზომველი"} არჩეულია`);
@@ -302,6 +313,21 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                     <span className="mono" style={{ fontWeight: 700 }}>{money(b.price)} · {b.days} დღე</span>
                   </div>
                 </div>
+
+                {o.due_at && !["done", "rated", "cancel"].includes(o.status) && (
+                  <div className="card" style={{ marginBottom: 12 }}>
+                    <div className="row" style={{ alignItems: "center" }}>
+                      <span className="lbl">ჩაბარების ვადა</span>
+                      <Countdown due={o.due_at} />
+                    </div>
+                    <div className="muted mono" style={{ fontSize: 11.5, marginTop: 4 }}>
+                      {new Date(o.due_at).toLocaleString("ka-GE", {
+                        day: "2-digit", month: "2-digit", year: "numeric",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div className="lbl" style={{ marginBottom: 4 }}>სამუშაოს პროგრესი</div>
                 <div className="wrap" style={{ marginBottom: 10 }}>
