@@ -38,6 +38,37 @@ export default function AuthScreen() {
   );
 }
 
+// პაროლის ველი ჩვენების ღილაკით
+function PasswordInput({ value, onChange, autoComplete = "current-password", onEnter }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        className="inp"
+        type={show ? "text" : "password"}
+        autoComplete={autoComplete}
+        value={value}
+        onChange={onChange}
+        onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
+        style={{ paddingRight: 46 }}
+      />
+      <button
+        type="button"
+        onClick={() => setShow((v) => !v)}
+        aria-label={show ? "პაროლის დამალვა" : "პაროლის ჩვენება"}
+        title={show ? "დამალვა" : "ჩვენება"}
+        style={{
+          position: "absolute", right: 1, top: 6, bottom: 1, width: 42,
+          background: "none", border: "none", cursor: "pointer",
+          color: "var(--muted)", display: "flex",
+          alignItems: "center", justifyContent: "center", padding: 0,
+        }}>
+        <Icon name={show ? "eyeOff" : "eye"} size={19} />
+      </button>
+    </div>
+  );
+}
+
 function translate(e) {
   const m = String(e?.message || e);
   if (/already registered|already exists/i.test(m)) return "ეს ელფოსტა უკვე დარეგისტრირებულია.";
@@ -109,9 +140,8 @@ function Login({ onBack, onSubmit, busy, err }) {
       <div className="lbl">ელფოსტა</div>
       <input className="inp" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <div className="lbl" style={{ marginTop: 10 }}>პაროლი</div>
-      <input className="inp" type="password" autoComplete="current-password" value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && email && password && onSubmit({ email, password })} />
+      <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)}
+        onEnter={() => email && password && onSubmit({ email, password })} />
       <button className="btn btn-go" style={{ marginTop: 20 }} disabled={busy || !email || !password}
         onClick={() => onSubmit({ email, password })}>
         {busy ? "შესვლა…" : "შესვლა"}
@@ -184,7 +214,13 @@ function Register({ role, onBack, onSubmit, busy, err, info }) {
           <input className="inp" type="email" autoComplete="email" value={f.email} onChange={(e) => set("email", e.target.value)} />
 
           <div className="lbl" style={{ marginTop: 10 }}>პაროლი (მინ. 6 სიმბოლო)</div>
-          <input className="inp" type="password" autoComplete="new-password" value={f.password} onChange={(e) => set("password", e.target.value)} />
+          <PasswordInput value={f.password} autoComplete="new-password"
+            onChange={(e) => set("password", e.target.value)} />
+          {f.password.length > 0 && f.password.length < 6 && (
+            <div style={{ fontSize: 11.5, color: "var(--bad)", marginTop: 5 }}>
+              კიდევ {6 - f.password.length} სიმბოლო
+            </div>
+          )}
 
           {isSurveyor && (
             <>
