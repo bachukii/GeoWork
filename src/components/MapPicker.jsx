@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { polygonArea, centroid, naprPortalUrl } from "../lib/geo";
-import { BASEMAPS, cadastreOverlay } from "../lib/basemaps";
+import { BASEMAPS, cadastreOverlay, cadastreAvailable } from "../lib/basemaps";
 import LayerSwitch from "./LayerSwitch";
-import { lookupByCode, identifyAt, codeFromProps, reasonText, isValidCode } from "../lib/napr";
+import { lookupByCode, codeFromProps, reasonText, isValidCode, cadastreEnabled } from "../lib/napr";
 import { m2 } from "../lib/constants";
 
 // ნაგულისხმევი ცენტრი — თბილისი
@@ -43,9 +43,9 @@ export default function MapPicker({
   const polyRef = useRef(null);
   const vertexLayerRef = useRef(null);
 
-  const [mode, setMode] = useState("parcel"); // parcel | point | polygon
+  const [mode, setMode] = useState(cadastreEnabled ? "parcel" : "polygon"); // parcel | point | polygon
   const [base, setBase] = useState("sat");
-  const [cadastre, setCadastre] = useState(true);
+  const [cadastre, setCadastre] = useState(cadastreAvailable);
   const baseRef = useRef(null);
   const underRef = useRef(null);
   const cadRef = useRef(null);
@@ -106,7 +106,8 @@ export default function MapPicker({
     if (!map) return;
     if (cadRef.current) { map.removeLayer(cadRef.current); cadRef.current = null; }
     if (cadastre) {
-      cadRef.current = cadastreOverlay().addTo(map);
+      const ov = cadastreOverlay();
+      if (ov) { cadRef.current = ov.addTo(map); }
       cadRef.current.setZIndex(3);
     }
   }, [cadastre]);
@@ -123,18 +124,6 @@ export default function MapPicker({
         setPts([]);
       } else if (mode === "polygon") {
         setPts((prev) => [...prev, p]);
-      } else if (mode === "parcel") {
-        setSeeking(true);
-        setNote(null);
-        try {
-          const r = await identifyAt(map, e.latlng);
-          if (r.ok) {
-            applyParcel(r.parcel);
-          } else {
-            setNote({ kind: "warn", text: reasonText[r.reason] || reasonText.service });
-          }
-        } catch { /* გაუქმებული */ }
-        setSeeking(false);
       }
     };
     map.on("click", onClick);
@@ -235,15 +224,17 @@ export default function MapPicker({
       {!readOnly && (
         <>
           <div className="grid3" style={{ gap: 6, marginBottom: 7 }}>
-            <button className={`chip chip-sm ${mode === "parcel" ? "on" : ""}`}
-              onClick={() => { setMode("parcel"); setCadastre(true); }}>ნაკვეთის არჩევა</button>
+            {cadastreEnabled && (
+              <button className={`chip chip-sm ${mode === "parcel" ? "on" : ""}`}
+                onClick={() => { setMode("parcel"); setCadastre(true); }}>ნაკვეთის არჩევა</button>
+            )}
             <button className={`chip chip-sm ${mode === "point" ? "on" : ""}`}
               onClick={() => setMode("point")}>წერტილი</button>
             <button className={`chip chip-sm ${mode === "polygon" ? "on" : ""}`}
               onClick={() => { setMode("polygon"); setPts([]); }}>ხელით დახაზვა</button>
           </div>
 
-          {mode === "parcel" && code && (
+          {cadastreEnabled && code && (
             <button className="btn btn-sm" style={{ width: "100%", marginBottom: 7 }}
               disabled={seeking || !isValidCode(code)} onClick={seekCode}>
               {seeking ? "იძებნება…" : `კოდით პოვნა — ${code}`}

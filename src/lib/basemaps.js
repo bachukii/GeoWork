@@ -71,10 +71,17 @@ export const BASEMAPS = {
   },
 };
 
-// საკადასტრო ნაკვეთები — ზედა ფენა, გამჭვირვალე
+// საკადასტრო ნაკვეთების ფენა.
+// NAPR-ის GeoServer დახურულია ("Access Denied"), ამიტომ ჩაირთვება
+// მხოლოდ მაშინ, როცა .env-ში საკუთარ endpoint-ს მიუთითებ.
+export const cadastreWmsUrl = import.meta.env.VITE_NAPR_WMS || null;
+export const cadastreLayer  = import.meta.env.VITE_NAPR_LAYER || null;
+export const cadastreAvailable = Boolean(cadastreWmsUrl && cadastreLayer);
+
 export function cadastreOverlay() {
-  return L.tileLayer.wms(`${GPV}/geoserver/ParcelA/wms`, {
-    layers: "ParcelA:RegParcels",
+  if (!cadastreAvailable) return null;
+  return L.tileLayer.wms(cadastreWmsUrl, {
+    layers: cadastreLayer,
     format: "image/png",
     transparent: true,
     version: "1.1.0",

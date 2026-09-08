@@ -1,5 +1,5 @@
 import React from "react";
-import { BASEMAPS } from "../lib/basemaps";
+import { BASEMAPS, cadastreAvailable } from "../lib/basemaps";
 
 // რუკის ფენების გადამრთველი
 export default function LayerSwitch({ base, setBase, cadastre, setCadastre }) {
@@ -9,8 +9,10 @@ export default function LayerSwitch({ base, setBase, cadastre, setCadastre }) {
         <button key={k} className={`chip chip-sm ${base === k ? "on" : ""}`}
           onClick={() => setBase(k)}>{v.label}</button>
       ))}
-      <button className={`chip chip-sm ${cadastre ? "on" : ""}`}
-        onClick={() => setCadastre(!cadastre)}>ნაკვეთები</button>
+      {cadastreAvailable && (
+        <button className={`chip chip-sm ${cadastre ? "on" : ""}`}
+          onClick={() => setCadastre(!cadastre)}>ნაკვეთები</button>
+      )}
     </div>
   );
 }

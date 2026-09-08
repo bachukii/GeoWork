@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { distance, fmtDistance, navUrl, naprPortalUrl } from "../lib/geo";
-import { BASEMAPS, cadastreOverlay } from "../lib/basemaps";
+import { BASEMAPS, cadastreOverlay, cadastreAvailable } from "../lib/basemaps";
 import LayerSwitch from "./LayerSwitch";
 
 const pinIcon = L.divIcon({
@@ -25,7 +25,7 @@ export default function MapView({ lat, lng, polygon, height = 240, label }) {
   const mapRef = useRef(null);
   const [dist, setDist] = useState(null);
   const [base, setBase] = useState("sat");
-  const [cadastre, setCadastre] = useState(true);
+  const [cadastre, setCadastre] = useState(cadastreAvailable);
   const baseRef = useRef(null);
   const underRef = useRef(null);
   const cadRef = useRef(null);
@@ -84,7 +84,10 @@ export default function MapView({ lat, lng, polygon, height = 240, label }) {
     const map = mapRef.current;
     if (!map) return;
     if (cadRef.current) { map.removeLayer(cadRef.current); cadRef.current = null; }
-    if (cadastre) { cadRef.current = cadastreOverlay().addTo(map); cadRef.current.setZIndex(3); }
+    if (cadastre) {
+      const ov = cadastreOverlay();
+      if (ov) { cadRef.current = ov.addTo(map); cadRef.current.setZIndex(3); }
+    }
   }, [cadastre]);
 
   if (!lat && !polygon?.length) {
