@@ -3,6 +3,7 @@ import Icon from "./Icon";
 import { Sheet, Row } from "./UI";
 import MapPicker from "./MapPicker";
 import { PhotoUpload } from "./Photos";
+import NaprFrame from "./NaprFrame";
 import { SERVICE_GROUPS, REGIONS, DEADLINES, m2 } from "../lib/constants";
 
 export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
@@ -16,6 +17,7 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
   const [addr, setAddr] = useState("");
   const [photos, setPhotos] = useState([]);
   const [folderId] = useState(() => crypto.randomUUID());
+  const [source, setSource] = useState("own");   // own | napr
   const [desc, setDesc] = useState("");
   const [dl, setDl] = useState(DEADLINES[1]);
   const [dlDate, setDlDate] = useState("");
@@ -80,9 +82,20 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
             თუ არა — მონიშნე ნაკვეთი რუკაზე დაჭერით ან დახაზე კონტური ხელით.
           </div>
 
-          <div style={{ marginTop: 12 }}>
+          <div className="grid2" style={{ marginTop: 14, marginBottom: 10 }}>
+            <button className={`chip ${source === "own" ? "on" : ""}`}
+              onClick={() => setSource("own")}>ჩვენი რუკა</button>
+            <button className={`chip ${source === "napr" ? "on" : ""}`}
+              onClick={() => setSource("napr")}>საჯარო რეესტრი</button>
+          </div>
+
+          <div style={{ display: source === "own" ? "block" : "none" }}>
             <MapPicker onChange={onGeo} onParcelFound={onParcel} code={code.trim()} height={320} />
           </div>
+
+          {source === "napr" && (
+            <NaprFrame lat={geo.lat} lng={geo.lng} height={420} />
+          )}
 
           {geo.area > 0 && (
             <div className="card tick" style={{ marginTop: 10 }}>
