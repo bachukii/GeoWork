@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { polygonArea, centroid, naprPortalUrl } from "../lib/geo";
 import { BASEMAPS, cadastreOverlay, cadastreAvailable } from "../lib/basemaps";
 import LayerSwitch from "./LayerSwitch";
-import { lookupByCode, codeFromProps, reasonText, isValidCode, cadastreEnabled } from "../lib/napr";
+import { lookupByCode, identifyAt, codeFromProps, reasonText, isValidCode } from "../lib/napr";
 import { m2 } from "../lib/constants";
 
 // ნაგულისხმევი ცენტრი — თბილისი
@@ -43,7 +43,7 @@ export default function MapPicker({
   const polyRef = useRef(null);
   const vertexLayerRef = useRef(null);
 
-  const [mode, setMode] = useState(cadastreEnabled ? "parcel" : "polygon"); // parcel | point | polygon
+  const [mode, setMode] = useState("parcel"); // parcel | point | polygon
   const [base, setBase] = useState("sat");
   const [cadastre, setCadastre] = useState(cadastreAvailable);
   const baseRef = useRef(null);
@@ -124,6 +124,14 @@ export default function MapPicker({
         setPts([]);
       } else if (mode === "polygon") {
         setPts((prev) => [...prev, p]);
+      } else if (mode === "parcel") {
+        setSeeking(true); setNote(null);
+        try {
+          const r = await identifyAt(map, e.latlng);
+          if (r.ok) applyParcel(r.parcel);
+          else setNote({ kind: "warn", text: reasonText[r.reason] || reasonText.blocked });
+        } catch { /* გაუქმებული */ }
+        setSeeking(false);
       }
     };
     map.on("click", onClick);
@@ -176,7 +184,11 @@ export default function MapPicker({
     try {
       const r = await lookupByCode(code);
       if (r.ok) applyParcel(r.parcel);
-      else setNote({ kind: "warn", text: reasonText[r.reason] || reasonText.service });
+      else setNote({
+        kind: "warn",
+        text: reasonText[r.reason] || reasonText.blocked,
+        tried: r.tried,
+      });
     } catch { /* ignore */ }
     setSeeking(false);
   }, [code, applyParcel]);
@@ -224,21 +236,22 @@ export default function MapPicker({
       {!readOnly && (
         <>
           <div className="grid3" style={{ gap: 6, marginBottom: 7 }}>
-            {cadastreEnabled && (
-              <button className={`chip chip-sm ${mode === "parcel" ? "on" : ""}`}
-                onClick={() => { setMode("parcel"); setCadastre(true); }}>ნაკვეთის არჩევა</button>
-            )}
+            <button className={`chip chip-sm ${mode === "parcel" ? "on" : ""}`}
+              onClick={() => setMode("parcel")}>ნაკვეთის არჩევა</button>
             <button className={`chip chip-sm ${mode === "point" ? "on" : ""}`}
               onClick={() => setMode("point")}>წერტილი</button>
             <button className={`chip chip-sm ${mode === "polygon" ? "on" : ""}`}
               onClick={() => { setMode("polygon"); setPts([]); }}>ხელით დახაზვა</button>
           </div>
 
-          {cadastreEnabled && code && (
-            <button className="btn btn-sm" style={{ width: "100%", marginBottom: 7 }}
-              disabled={seeking || !isValidCode(code)} onClick={seekCode}>
-              {seeking ? "იძებნება…" : `კოდით პოვნა — ${code}`}
-            </button>
+          <button className="btn btn-go" style={{ width: "100%", marginBottom: 8 }}
+            disabled={seeking || !isValidCode(code)} onClick={seekCode}>
+            {seeking ? "იძებნება…" : "ძებნა კოდით"}
+          </button>
+          {code && !isValidCode(code) && (
+            <div className="muted" style={{ fontSize: 11.5, marginTop: -4, marginBottom: 8 }}>
+              ფორმატი: 01.72.14.031.045
+            </div>
           )}
 
           <LayerSwitch base={base} setBase={setBase} cadastre={cadastre} setCadastre={setCadastre} />
@@ -283,6 +296,14 @@ export default function MapPicker({
           {note && (
             <div className={note.kind === "ok" ? "ok" : "warn"} style={{ marginTop: 7 }}>
               {note.text}
+              {note.tried?.length > 0 && (
+                <details style={{ marginTop: 6 }}>
+                  <summary style={{ cursor: "pointer", fontSize: 11.5 }}>ტექნიკური დეტალები</summary>
+                  <div className="mono" style={{ fontSize: 10.5, marginTop: 4, opacity: .85 }}>
+                    {note.tried.map((t, i) => <div key={i}>{t}</div>)}
+                  </div>
+                </details>
+              )}
             </div>
           )}
 
