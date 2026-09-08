@@ -36,3 +36,27 @@ export const fmtDistance = (m) =>
 // ნავიგაციის ლინკი — მუშაობს Google Maps-შიც და Apple Maps-შიც
 export const navUrl = (lat, lng) =>
   `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+// ============================================================
+// maps.gov.ge — საჯარო რეესტრის პორტალის ღრმა ბმული
+//
+// პორტალის iframe-ად ჩაშენება არ გამოგვადგება: ის მთლიანი
+// აპლიკაციაა საკუთარი ინტერფეისით და X-Frame დაცვით.
+// ამის ნაცვლად ვხსნით ზუსტ წერტილს იმავე ფენებით.
+//
+// layers=92,97,401 — ორთოფოტო + საკადასტრო ნაკვეთები + საზღვრები
+// (ID-ები პორტალის შიდაა; შეცვლის შემთხვევაში აქ განახლდება)
+// ============================================================
+export const NAPR_PORTAL_LAYERS = "92,97,401";
+
+export function naprPortalUrl(lat, lng, zoom = 18.5, layers = NAPR_PORTAL_LAYERS) {
+  if (lat == null || lng == null) return null;
+  const state = [
+    `point=${lng},${lat}`,
+    `zoom=${zoom}`,
+    "projection=EPSG:4326",
+    `layers=${layers}`,
+    "lang=ka",
+  ].join("&");
+  return `https://maps.gov.ge/map/portal#state/${state}`;
+}

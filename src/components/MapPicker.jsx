@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { polygonArea, centroid } from "../lib/geo";
+import { polygonArea, centroid, naprPortalUrl } from "../lib/geo";
 import { BASEMAPS, cadastreOverlay } from "../lib/basemaps";
 import LayerSwitch from "./LayerSwitch";
 import { lookupByCode, identifyAt, codeFromProps, reasonText, isValidCode } from "../lib/napr";
@@ -269,6 +269,16 @@ export default function MapPicker({
             <button className="btn2 btn-sm" onClick={locate} disabled={locating}>
               {locating ? "…" : "ჩემი ადგილი"}
             </button>
+            {(center || pts.length >= 3) && (() => {
+              const c = pts.length >= 3 ? centroid(pts) : center;
+              return (
+                <a className="btn2 btn-sm" href={naprPortalUrl(c[0], c[1])}
+                  target="_blank" rel="noreferrer"
+                  style={{ textDecoration: "none", display: "inline-block" }}>
+                  maps.gov.ge-ზე გახსნა
+                </a>
+              );
+            })()}
             {mode === "polygon" && (
               <>
                 <button className="btn2 btn-sm" onClick={() => setPts((p) => p.slice(0, -1))}

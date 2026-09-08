@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { distance, fmtDistance, navUrl } from "../lib/geo";
+import { distance, fmtDistance, navUrl, naprPortalUrl } from "../lib/geo";
 import { BASEMAPS, cadastreOverlay } from "../lib/basemaps";
 import LayerSwitch from "./LayerSwitch";
 
@@ -101,6 +101,12 @@ export default function MapView({ lat, lng, polygon, height = 240, label }) {
         {lat && (
           <a className="btn2 btn-sm" href={navUrl(lat, lng)} target="_blank" rel="noreferrer"
             style={{ textDecoration: "none", display: "inline-block" }}>ნავიგაცია</a>
+        )}
+        {lat && (
+          <a className="btn2 btn-sm" href={naprPortalUrl(lat, lng)} target="_blank" rel="noreferrer"
+            style={{ textDecoration: "none", display: "inline-block" }}>
+            maps.gov.ge
+          </a>
         )}
         {dist !== null && (
           <span className="pill s-selected">{fmtDistance(dist)}</span>
