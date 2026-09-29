@@ -20,16 +20,36 @@
 
 ---
 
+## სტრუქტურა
+
+```
+index.html, package.json, vite.config.js, netlify.toml
+public/          favicon
+src/
+  App.jsx, main.jsx, styles.css
+  components/    UI კომპონენტები (რუკა, ჩატი, გადახდა, ...)
+  views/         დამკვეთის / ამზომველის / ადმინის ეკრანები
+  context/       ავტორიზაცია
+  lib/           supabase, NAPR, გეომეტრია, კონსტანტები
+supabase/        schema.sql + მიგრაციები (v2 → v3 → v4 → v5, თანმიმდევრობით)
+docs/            ბრენდი, NAPR-ის რუკა, v2-ის განახლება
+```
+
+> ფაილები **მხოლოდ** შესაბამის საქაღალდეში უნდა აიტვირთოს. თუ GitHub-ზე
+> „Add files via upload"-ით ტვირთავ, ჯერ გადადი სწორ საქაღალდეში
+> (მაგ. `src/components/`), თორემ ფაილი root-ში ჩავარდება და დუბლიკატი გაჩნდება.
+
+---
+
 ## 1. Supabase-ის მომზადება
 
 1. გახსენი [supabase.com](https://supabase.com) → **New project**.
-2. პროექტში: **SQL Editor** → **New query** → ჩააკოპირე მთლიანი
-   `supabase/schema.sql` → **Run**.
-3. **Authentication → Providers → Email**: სატესტოდ **გამორთე „Confirm email"**.
-
-   > ეს მნიშვნელოვანია. თუ დადასტურება ჩართულია, რეგისტრაციისას session ჯერ არ
-   > იქმნება და პროფილის ჩაწერა RLS-ის გამო ვერ ხერხდება. პროდაქშენში ჯობია
-   > ჩართო და პროფილის შექმნა database trigger-ით გააკეთო (იხ. ქვემოთ).
+2. პროექტში: **SQL Editor** → **New query** → ჩააკოპირე და გაუშვი (**Run**)
+   თანმიმდევრობით: `supabase/schema.sql`, `migration_v2.sql`, `migration_v3.sql`,
+   `migration_v4.sql`, `migration_v5.sql`.
+3. **Authentication → Providers → Email**: „Confirm email" შეგიძლია ჩართულიც
+   დატოვო. პროფილს ბაზა ქმნის trigger-ით (`migration_v5.sql`), ამიტომ
+   რეგისტრაცია დადასტურების გარეშეც და დადასტურებითაც მუშაობს.
 
 4. **Project Settings → API**-დან აიღე:
    - `Project URL`
@@ -131,43 +151,9 @@ update public.profiles set role = 'admin' where id = '<შენი-uuid>';
 
 ---
 
-## პროდაქშენისთვის: პროფილის შექმნა trigger-ით
+## უსაფრთხოება: როლი და ვერიფიკაცია
 
-როცა „Confirm email"-ს ჩართავ, პროფილი უნდა შეიქმნას სერვერზე. დაამატე:
-
-```sql
-create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin
-  insert into public.profiles (id, role, full_name, phone, user_type)
-  values (
-    new.id,
-    coalesce((new.raw_user_meta_data->>'role')::user_role, 'client'),
-    coalesce(new.raw_user_meta_data->>'full_name', 'უსახელო'),
-    new.raw_user_meta_data->>'phone',
-    coalesce((new.raw_user_meta_data->>'user_type')::user_type, 'individual')
-  );
-  return new;
-end; $$;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
-```
-
-შემდეგ `AuthContext.jsx`-ში `signUp`-ს გადააწოდე `options.data` მეტამონაცემებით
-და მოაშორე პირდაპირი `profiles.insert`.
-
----
-
-## სტრუქტურა
-
-```
-src/
-  lib/          supabase კლიენტი, კონსტანტები, საკადასტრო lookup
-  context/      AuthContext — session + profile + როლი
-  components/   UI, NewOrder, Chat, RateForm, AreaDraw, SurveyorProfile
-  views/        AuthScreen, ClientView, SurveyorView, AdminView
-supabase/
-  schema.sql    ცხრილები + RLS პოლიტიკები
-```
+`migration_v5.sql` ამატებს trigger-ს `profiles_guard_privileges`: `role`-ს და
+`verified`-ს მხოლოდ ადმინი ცვლის. ჩვეულებრივი მომხმარებელი ვერც საკუთარ თავს
+დანიშნავს ადმინად და ვერც ვერიფიკაციას მიიწერს, API-ზე პირდაპირი მიმართვითაც ვერა.
+SQL Editor-იდან ცვლილება ისევ შეიძლება (პირველი ადმინის დანიშვნა, იხ. ზემოთ).
