@@ -38,7 +38,7 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
 
   if (loading) return <div className="app app-solo"><Spinner /></div>;
 
-  if (!session) return <div className="app app-solo"><AuthScreen /></div>;
+  if (!session) return <AuthScreen />;
 
   // ავტორიზებულია, მაგრამ პროფილი არ არსებობს
   // (ძველი ანგარიში, შექმნილი migration_v5-მდე, ან migration_v5 არ არის გაშვებული)
