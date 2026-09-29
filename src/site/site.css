@@ -1,0 +1,143 @@
+/* ============================================================
+   საჯარო საიტი. იყენებს styles.css-ის ცვლადებს და .lp-* კლასებს.
+   ============================================================ */
+
+a.btn, a.btn2 { display: inline-block; text-align: center; text-decoration: none; }
+.lp a { color: inherit; }
+.lp a.lp-link { color: var(--sky); font-weight: 600; text-decoration: none; }
+.lp a.lp-link:hover { text-decoration: underline; }
+.lp a.lp-ghost { text-decoration: none; text-align: center; }
+
+/* ---------- ზედა ზოლი ---------- */
+.sh { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.96); backdrop-filter: blur(8px); border-bottom: 1px solid var(--hair); }
+.sh-in { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.sh-logo { text-decoration: none; }
+.sh-burger { display: grid; place-items: center; width: 44px; height: 44px; background: none; border: none; color: var(--navy); cursor: pointer; margin-right: -10px; }
+.sh-nav {
+  display: none; position: absolute; top: 64px; left: 0; right: 0;
+  background: var(--surface); border-bottom: 1px solid var(--hair);
+  flex-direction: column; padding: 8px 20px 20px; box-shadow: 0 12px 24px rgba(10,30,50,.08);
+}
+.sh-nav.open { display: flex; }
+.sh-a { padding: 13px 0; font-weight: 600; font-size: 15.5px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--hair); }
+.lp .sh-a.on { color: var(--navy); box-shadow: inset 3px 0 0 var(--gold); padding-left: 12px; }
+.lp .sh-cta { margin-top: 16px; color: #2B2005; }
+
+/* ---------- გვერდის სათაური ---------- */
+.ph { position: relative; overflow: hidden; background: var(--navy); color: #fff; }
+.ph-in { position: relative; padding-top: 44px; padding-bottom: 44px; }
+.ph h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+.ph p { margin: 10px 0 0; color: rgba(255,255,255,.75); max-width: 60ch; font-size: 15.5px; line-height: 1.6; }
+
+.lp-hero { padding-top: 12px; }
+
+/* ---------- მომსახურებების ბარათები ---------- */
+.sec-hd { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+.sec-hd .lp-h2 { margin: 0; }
+.svc-grid { display: grid; gap: 12px; }
+.lp a.svc-card {
+  display: block; text-decoration: none; background: var(--surface); border: 1px solid var(--hair);
+  border-radius: 8px; padding: 22px; transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.lp a.svc-card:hover { border-color: var(--navy); box-shadow: 0 10px 24px rgba(10,30,50,.08); transform: translateY(-2px); }
+.lp a.svc-card { display: grid; grid-template-columns: 42px 1fr; column-gap: 14px; align-items: start; padding: 18px; }
+.svc-card .svc-ic { grid-row: span 2; }
+.svc-card h3 { margin: 2px 0 4px; font-size: 16px; color: var(--ink); }
+.svc-card p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.55; }
+.svc-ic { display: inline-grid; place-items: center; width: 42px; height: 42px; border-radius: 10px; background: #EAF1F8; color: var(--navy); flex: none; }
+
+/* ---------- მომსახურებების გვერდი ---------- */
+.svc-list { display: grid; gap: 18px; }
+.svc-item { background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 24px; scroll-margin-top: 84px; }
+.svc-item-hd { display: flex; align-items: center; gap: 14px; }
+.svc-item-hd h2 { margin: 0; font-size: 21px; color: var(--navy); }
+.svc-about { margin: 16px 0 18px; color: var(--ink); line-height: 1.7; font-size: 15px; }
+.svc-cols { display: grid; gap: 18px; }
+.svc-cols b { display: block; margin-bottom: 10px; font-size: 14px; }
+.svc-cols .lp-list { margin-bottom: 0; }
+.lp a.svc-btn { margin-top: 22px; width: auto; color: #2B2005; }
+
+/* ---------- FAQ ---------- */
+.faq { display: grid; gap: 10px; max-width: 820px; }
+.faq details { background: var(--surface); border: 1px solid var(--hair); border-radius: 8px; padding: 0 20px; }
+.faq summary { cursor: pointer; list-style: none; padding: 18px 28px 18px 0; font-weight: 700; position: relative; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; position: absolute; right: 0; top: 14px; font-size: 22px; font-weight: 400; color: var(--muted); }
+.faq details[open] summary::after { content: "−"; }
+.faq p { margin: 0 0 18px; color: var(--muted); line-height: 1.65; }
+
+/* ---------- CTA ზოლი ---------- */
+.cta-band { position: relative; overflow: hidden; background: var(--navy); color: #fff; }
+.cta-in { position: relative; display: flex; flex-direction: column; gap: 20px; padding-top: 48px; padding-bottom: 48px; }
+.cta-in h2 { margin: 0; font-size: 28px; font-weight: 800; }
+.cta-in p { margin: 8px 0 0; color: rgba(255,255,255,.75); }
+.lp .cta-in .btn { color: #2B2005; }
+
+/* ---------- ჩვენ შესახებ ---------- */
+.about { display: grid; gap: 24px; align-items: start; }
+.about-txt p { line-height: 1.75; font-size: 15.5px; margin: 0 0 14px; }
+.about-card { background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 24px; }
+.about-card h3 { margin: 0 0 6px; color: var(--navy); }
+.about-card p { margin: 0 0 16px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.lp .about-card a.btn { width: 100%; color: #fff; }
+.lp .about-card a.btn2 { color: var(--navy); }
+
+/* ---------- განაცხადი ---------- */
+.contact { display: grid; gap: 24px; align-items: start; }
+.contact-form { background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 22px; }
+.sf { display: grid; gap: 14px; }
+.sf-row { display: grid; gap: 14px; }
+.sf-f { display: grid; gap: 6px; }
+.sf-note { font-size: 12.5px; color: var(--muted); }
+.sf-done { text-align: center; padding: 24px 8px; }
+.sf-done-t { font-size: 22px; font-weight: 800; color: var(--ok); }
+.sf-done p { color: var(--muted); line-height: 1.6; }
+.sf-done a { color: var(--sky); font-weight: 600; }
+.contact-side { background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 22px; }
+.contact-side h3 { margin: 0 0 12px; color: var(--navy); }
+.contact-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--hair); font-size: 14.5px; color: var(--ink); text-decoration: none; }
+.contact-row svg { color: var(--navy); flex: none; }
+
+/* ---------- ქვედა ზოლი ---------- */
+.sfoot { background: #0E2C48; color: rgba(255,255,255,.72); font-size: 14px; }
+.sfoot-in { display: grid; gap: 28px; padding-top: 44px; padding-bottom: 28px; }
+.sfoot-in > div { display: flex; flex-direction: column; gap: 8px; }
+.sfoot-in b { color: #fff; font-size: 14px; margin-bottom: 4px; }
+.lp .sfoot a { color: rgba(255,255,255,.72); text-decoration: none; }
+.lp .sfoot a:hover { color: #fff; }
+.sfoot p { margin: 10px 0 0; }
+.sfoot-copy { border-top: 1px solid rgba(255,255,255,.1); padding-top: 18px; padding-bottom: 24px; font-size: 12.5px; }
+
+@media (min-width: 900px) {
+  .sh-in { height: 72px; }
+  .sh-burger { display: none; }
+  .sh-nav {
+    display: flex; position: static; flex-direction: row; align-items: center; gap: 4px;
+    padding: 0; border: none; box-shadow: none; background: none;
+  }
+  .sh-a { border: none; padding: 8px 14px; font-size: 14.5px; color: var(--muted); border-radius: 6px; }
+  .sh-a:hover { color: var(--navy); background: #F1F4F7; }
+  .lp .sh-a.on { color: var(--navy); box-shadow: none; padding-left: 14px; background: #EAF1F8; }
+  .lp .sh-cta { margin: 0 0 0 12px; width: auto; padding: 10px 20px; }
+
+  .ph-in { padding-top: 72px; padding-bottom: 72px; }
+  .ph h1 { font-size: 44px; }
+  .ph p { font-size: 17px; }
+
+  .svc-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .lp a.svc-card { display: block; padding: 28px; }
+  .svc-card h3 { margin: 14px 0 6px; font-size: 16.5px; }
+  .svc-item { padding: 36px; }
+  .svc-cols { grid-template-columns: 1fr 1fr; gap: 32px; }
+
+  .cta-in { flex-direction: row; justify-content: space-between; align-items: center; padding-top: 64px; padding-bottom: 64px; }
+  .cta-in h2 { font-size: 34px; }
+  .lp .cta-in .btn { width: auto; padding: 14px 30px; }
+
+  .about { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 48px; }
+  .contact { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 32px; }
+  .contact-form { padding: 32px; }
+  .sf-row { grid-template-columns: 1fr 1fr; }
+
+  .sfoot-in { grid-template-columns: 1.4fr 1fr 1.4fr 1.2fr; gap: 40px; padding-top: 60px; }
+}
