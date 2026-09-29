@@ -41,18 +41,18 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
   if (!session) return <div className="app app-solo"><AuthScreen /></div>;
 
   // ავტორიზებულია, მაგრამ პროფილი არ არსებობს
-  // (ხდება მაშინ, როცა email confirmation ჩართულია და პროფილი ვერ ჩაიწერა)
+  // (ძველი ანგარიში, შექმნილი migration_v5-მდე, ან migration_v5 არ არის გაშვებული)
   if (!profile) {
     return (
       <div className="app app-solo">
         <div style={{ padding: 24 }}>
           <div className="warn" style={{ marginBottom: 12 }}>
-            ანგარიში არსებობს, მაგრამ პროფილი ვერ მოიძებნა. ეს ხდება მაშინ, როცა
-            Supabase-ში ჩართულია „Confirm email" და რეგისტრაცია დადასტურებამდე შეწყდა.
+            ანგარიში არსებობს, მაგრამ პროფილი ვერ მოიძებნა.
           </div>
           <div style={{ fontSize: 13, marginBottom: 12 }}>
-            გამოსავალი: Supabase → Authentication → Providers → Email → გამორთე
-            „Confirm email" (სატესტოდ), წაშალე ეს მომხმარებელი და თავიდან დარეგისტრირდი.
+            ადმინისტრატორისთვის: დარწმუნდი, რომ Supabase-ში გაშვებულია
+            <span className="mono"> supabase/migration_v5.sql</span>. თუ ანგარიში ამ
+            მიგრაციამდე შეიქმნა, წაშალე (Authentication → Users) და თავიდან დარეგისტრირდი.
           </div>
           <button className="btn2" onClick={signOut}>გასვლა</button>
         </div>

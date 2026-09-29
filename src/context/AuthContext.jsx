@@ -39,36 +39,35 @@ export function AuthProvider({ children }) {
     return () => { alive = false; sub.subscription.unsubscribe(); };
   }, [loadProfile]);
 
-  // ---------- რეგისტრაცია: როლი აქვე ეწერება პროფილში ----------
+  // ---------- რეგისტრაცია ----------
+  // პროფილს ბაზა ქმნის (trigger handle_new_user, supabase/migration_v5.sql)
+  // იმ მონაცემებით, რომლებსაც აქ metadata-ში ვატანთ. ამიტომ მუშაობს
+  // ჩართული „Confirm email"-ითაც. role-ს trigger მხოლოდ client/surveyor-ად იღებს.
   const signUp = async ({ email, password, role, fields }) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const isSurveyor = role === "surveyor";
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          role,
+          full_name: fields.fullName,
+          phone: fields.phone || null,
+          user_type: fields.userType || "individual",
+          company_name: fields.companyName || null,
+          company_id: fields.companyId || null,
+          website: fields.website || null,
+          experience: isSurveyor ? String(Number(fields.experience) || 0) : "0",
+          bio: fields.bio || null,
+          regions: isSurveyor ? (fields.regions || []) : [],
+          services: isSurveyor ? (fields.services || []) : [],
+        },
+      },
+    });
     if (error) throw error;
 
-    // თუ email confirmation ჩართულია, session ჯერ არ არსებობს —
-    // ამ შემთხვევაში პროფილს ვერ ჩავწერთ (RLS: id = auth.uid()).
     const user = data.user;
-    if (!data.session) {
-      return { needsConfirmation: true, user };
-    }
-
-    const row = {
-      id: user.id,
-      role,
-      full_name: fields.fullName,
-      phone: fields.phone || null,
-      user_type: fields.userType || "individual",
-      company_name: fields.companyName || null,
-      company_id: fields.companyId || null,
-      website: fields.website || null,
-      experience: role === "surveyor" ? Number(fields.experience) || 0 : 0,
-      bio: fields.bio || null,
-      regions: role === "surveyor" ? (fields.regions || []) : [],
-      services: role === "surveyor" ? (fields.services || []) : [],
-      verified: false,
-    };
-
-    const { error: pErr } = await supabase.from("profiles").insert(row);
-    if (pErr) throw pErr;
+    if (!data.session) return { needsConfirmation: true, user };
 
     await loadProfile(user.id);
     return { needsConfirmation: false, user };
