@@ -6,19 +6,32 @@ import React, { useEffect, useState } from "react";
 
 const listeners = new Set();
 
+const here = () => window.location.pathname + window.location.search + window.location.hash;
+
 export function navigate(to) {
-  if (to === window.location.pathname + window.location.search) return;
+  if (to === here()) {
+    scrollToHash();
+    return;
+  }
   window.history.pushState({}, "", to);
   listeners.forEach((fn) => fn());
-  window.scrollTo(0, 0);
+  if (!window.location.hash) window.scrollTo(0, 0);
+}
+
+// #slug — გადახვევა ელემენტზე (რენდერის შემდეგ, რომ ელემენტი უკვე არსებობდეს)
+export function scrollToHash() {
+  const id = decodeURIComponent(window.location.hash.slice(1));
+  if (!id) return;
+  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: "start" }));
 }
 
 export function usePath() {
-  const [loc, setLoc] = useState(() => ({
-    path: window.location.pathname, search: window.location.search,
-  }));
+  const read = () => ({
+    path: window.location.pathname, search: window.location.search, hash: window.location.hash,
+  });
+  const [loc, setLoc] = useState(read);
   useEffect(() => {
-    const update = () => setLoc({ path: window.location.pathname, search: window.location.search });
+    const update = () => setLoc(read());
     listeners.add(update);
     window.addEventListener("popstate", update);
     return () => { listeners.delete(update); window.removeEventListener("popstate", update); };

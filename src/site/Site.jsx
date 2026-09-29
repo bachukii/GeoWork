@@ -3,7 +3,7 @@ import Logo from "../components/Logo";
 import Icon from "../components/Icon";
 import TriGrid from "../components/TriGrid";
 import OrderForm from "./OrderForm";
-import { Link, usePath } from "./router";
+import { Link, usePath, scrollToHash } from "./router";
 import { SITE } from "./config";
 import { SERVICES, STEPS, WHY, FAQ } from "./content";
 
@@ -22,7 +22,7 @@ const TITLES = {
 };
 
 export default function Site() {
-  const { path, search } = usePath();
+  const { path, search, hash } = usePath();
   const page = TITLES[path] ? path : "404";
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function Site() {
       <Header path={path} />
       <main>
         {page === "/" && <Home />}
-        {page === "/services" && <Services />}
+        {page === "/services" && <Services hash={hash} />}
         {page === "/about" && <About />}
         {page === "/contact" && <Contact search={search} />}
         {page === "404" && <NotFound />}
@@ -237,12 +237,9 @@ function PageHead({ title, lede }) {
 }
 
 // ---------------- მომსახურებები ----------------
-function Services() {
-  // /services#slug — გადახვევა შესაბამის მომსახურებაზე
-  useEffect(() => {
-    const id = window.location.hash.slice(1);
-    if (id) document.getElementById(id)?.scrollIntoView({ block: "start" });
-  }, []);
+function Services({ hash }) {
+  // /services#slug — გადახვევა შესაბამის მომსახურებაზე (პირველ ჩატვირთვაზეც და ბმულზე დაჭერისასაც)
+  useEffect(() => { scrollToHash(); }, [hash]);
 
   return (
     <>
