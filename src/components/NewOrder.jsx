@@ -3,7 +3,7 @@ import Icon from "./Icon";
 import { Sheet, Row } from "./UI";
 import MapPicker from "./MapPicker";
 import { PhotoUpload } from "./Photos";
-import NaprFrame from "./NaprFrame";
+import { isValidCode } from "../lib/napr";
 import { SERVICE_GROUPS, REGIONS, DEADLINES, m2 } from "../lib/constants";
 
 export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
@@ -11,38 +11,29 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
   const [cat, setCat] = useState(null);
   const [svc, setSvc] = useState(null);
   const [code, setCode] = useState("");
-  const [geo, setGeo] = useState({ lat: null, lng: null, polygon: null, area: 0, fromParcel: false });
-  const [parcelCode, setParcelCode] = useState(null);
+  const [geo, setGeo] = useState({ lat: null, lng: null, polygon: null, area: 0 });
   const [region, setRegion] = useState(REGIONS[0]);
   const [addr, setAddr] = useState("");
   const [photos, setPhotos] = useState([]);
   const [folderId] = useState(() => crypto.randomUUID());
-  const [source, setSource] = useState("own");   // own | napr
   const [desc, setDesc] = useState("");
   const [dl, setDl] = useState(DEADLINES[1]);
   const [dlDate, setDlDate] = useState("");
 
-  const onGeo = useCallback((g) => {
-    setGeo((prev) => ({ ...g, fromParcel: prev.fromParcel }));
-  }, []);
+  const onGeo = useCallback((g) => setGeo(g), []);
 
-  const onParcel = useCallback((p) => {
-    setParcelCode(p.code || null);
-    if (p.code) setCode(p.code);
-    setGeo((prev) => ({ ...prev, fromParcel: true }));
-  }, []);
-
+  const codeOk = isValidCode(code);
   const canNext =
     step === 1 ? !!svc :
-    step === 2 ? (geo.lat !== null || geo.area > 0) : true;
+    step === 2 ? (codeOk || geo.lat !== null || geo.area > 0) : true;
 
   const place = addr.trim() || region;
   const area = geo.area || 0;
 
   const publish = () => onPublish({
     category: cat, service: svc, region, place,
-    cadastral_code: (parcelCode || code).trim() || null,
-    area, area_source: geo.fromParcel ? "cadastral" : "manual",
+    cadastral_code: code.trim() || null,
+    area, area_source: "manual",
     lat: geo.lat, lng: geo.lng, polygon: geo.polygon,
     photos, description: desc.trim() || null,
     deadline: dl === "კონკრეტული თარიღი" ? (dlDate || dl) : dl,
@@ -76,32 +67,38 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
         <div>
           <div className="lbl">საკადასტრო კოდი</div>
           <input className="inp mono" placeholder="01.72.14.031.045" value={code}
-            onChange={(e) => { setCode(e.target.value); setLookup(undefined); }} />
-          <div className="muted" style={{ fontSize: 11.5, marginTop: 5 }}>
-            თუ კოდი გაქვს — ჩაწერე და რუკაზე „კოდით პოვნა" დააჭირე.
-            თუ არა — მონიშნე ნაკვეთი რუკაზე დაჭერით ან დახაზე კონტური ხელით.
-          </div>
-
-          <div className="grid2" style={{ marginTop: 14, marginBottom: 10 }}>
-            <button className={`chip ${source === "own" ? "on" : ""}`}
-              onClick={() => setSource("own")}>ჩვენი რუკა</button>
-            <button className={`chip ${source === "napr" ? "on" : ""}`}
-              onClick={() => setSource("napr")}>საჯარო რეესტრი</button>
-          </div>
-
-          <div style={{ display: source === "own" ? "block" : "none" }}>
-            <MapPicker onChange={onGeo} onParcelFound={onParcel} code={code.trim()} height={320} />
-          </div>
-
-          {source === "napr" && (
-            <NaprFrame lat={geo.lat} lng={geo.lng} height={420} />
+            onChange={(e) => setCode(e.target.value)} />
+          {code.trim() && !codeOk ? (
+            <div style={{ fontSize: 11.5, marginTop: 5, color: "var(--warn)" }}>
+              ფორმატი: 01.72.14.031.045 (ბინისთვის: 01.72.14.031.045.01.500)
+            </div>
+          ) : (
+            <div className="muted" style={{ fontSize: 11.5, marginTop: 5 }}>
+              კოდით ამზომველი ნაკვეთს საჯარო რეესტრში იპოვის. თუ არ იცი — მონიშნე ადგილი რუკაზე.
+            </div>
           )}
 
-          {geo.area > 0 && (
+          <a className="btn2 btn-sm" href="https://maps.gov.ge/map/portal/" target="_blank" rel="noreferrer"
+            style={{ textDecoration: "none", display: "inline-block", marginTop: 8 }}
+            onClick={() => { if (code.trim()) navigator.clipboard?.writeText(code.trim()).catch(() => {}); }}>
+            {code.trim() ? "კოდის კოპირება და " : ""}საჯარო რეესტრში ნახვა ↗
+          </a>
+          <div className="muted" style={{ fontSize: 11.5, marginTop: 6 }}>
+            რეესტრის რუკაზე იპოვე ნაკვეთი, ნახე მისი საზღვრები და შემდეგ აქ მოხაზე — „კონტურის დახაზვა".
+          </div>
+
+          <div className="lbl" style={{ marginTop: 16, marginBottom: 6 }}>ადგილი რუკაზე</div>
+          <MapPicker onChange={onGeo} height={320} />
+
+          {(geo.area > 0 || codeOk) && (
             <div className="card tick" style={{ marginTop: 10 }}>
-              <Row l="ფართობი" v={m2(geo.area)} mono />
-              {parcelCode && <Row l="საკადასტრო კოდი" v={parcelCode} mono />}
-              <Row l="წყარო" v={geo.fromParcel ? "საჯარო რეესტრი" : "ხელით მონიშნული"} />
+              {codeOk && <Row l="საკადასტრო კოდი" v={code.trim()} mono />}
+              {geo.area > 0 && <Row l="ფართობი (მიახლოებით)" v={m2(geo.area)} mono />}
+            </div>
+          )}
+          {!canNext && (
+            <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+              გასაგრძელებლად ჩაწერე საკადასტრო კოდი ან მონიშნე ადგილი რუკაზე.
             </div>
           )}
         </div>
@@ -146,8 +143,8 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
             <div style={{ fontWeight: 700, marginBottom: 8 }}>შეკვეთის შეჯამება</div>
             <Row l="მომსახურება" v={svc} />
             <Row l="მდებარეობა" v={place} />
-            {(parcelCode || code) && <Row l="საკადასტრო კოდი" v={parcelCode || code} mono />}
-            <Row l="ფართობი" v={`${m2(area)}${geo.fromParcel ? "" : " (≈)"}`} mono />
+            {code.trim() && <Row l="საკადასტრო კოდი" v={code.trim()} mono />}
+            {area > 0 && <Row l="ფართობი" v={`${m2(area)} (≈)`} mono />}
             <Row l="ფოტოები" v={photos.length} mono />
             {geo.lat && <Row l="კოორდინატები" v={`${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}`} mono />}
             {geo.polygon && <Row l="კონტური" v={`${geo.polygon.length} წერტილი`} mono />}

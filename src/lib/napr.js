@@ -34,7 +34,8 @@ const WMS_ENDPOINTS = [
   "/napr-wms/geoserver/ParcelA/wms",
 ].filter(Boolean);
 
-const CODE_RE = /^\d{2}\.\d{2}\.\d{2}\.\d{3}(\.\d{3})?$/;
+// ნაკვეთი: 01.72.14.031.045 (ან 4 ჯგუფით), ბინა/ფართი: …045.01.500
+const CODE_RE = /^\d{2}\.\d{2}\.\d{2}\.\d{3}(\.\d{3}(\.\d{2}\.\d{3})?)?$/;
 const CODE_LOOSE = /^\d{2}\.\d{2}\.\d{2}\.\d{3}/;
 export const isValidCode = (c) => CODE_RE.test(String(c || "").trim());
 

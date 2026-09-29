@@ -314,9 +314,16 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
             <Row l="მომსახურება" v={o.service} />
             <Row l="მდებარეობა" v={o.place} />
             {o.cadastral_code && <Row l="საკ. კოდი" v={o.cadastral_code} mono />}
-            <Row l="ფართობი" v={`${m2(o.area)}${o.area_source === "manual" ? " (მიახლ.)" : ""}`} mono />
+            {o.area > 0 && <Row l="ფართობი" v={`${m2(o.area)}${o.area_source === "manual" ? " (მიახლ.)" : ""}`} mono />}
             <Row l="სასურველი ვადა" v={o.deadline} />
             <Row l="დამკვეთი" v={client?.full_name || "—"} />
+            {o.cadastral_code && (
+              <a className="btn2 btn-sm" href="https://maps.gov.ge/map/portal/" target="_blank" rel="noreferrer"
+                style={{ textDecoration: "none", display: "inline-block", marginTop: 8 }}
+                onClick={() => navigator.clipboard?.writeText(o.cadastral_code).catch(() => {})}>
+                კოდის კოპირება და რეესტრში ნახვა ↗
+              </a>
+            )}
           </div>
 
           {(o.lat || o.polygon) && (

@@ -74,7 +74,9 @@ export const BASEMAPS = {
 // საკადასტრო ნაკვეთების ფენა.
 // NAPR-ის GeoServer დახურულია ("Access Denied"), ამიტომ ჩაირთვება
 // მხოლოდ მაშინ, როცა .env-ში საკუთარ endpoint-ს მიუთითებ.
-export const cadastreWmsUrl = import.meta.env.VITE_NAPR_WMS || "https://gpv0.napr.gov.ge/geoserver/ParcelA/wms";
+// საჯარო რეესტრის WMS (gpv0.napr.gov.ge) საჯაროდ დახურულია („Access Denied"),
+// ამიტომ ფენა ჩაირთვება მხოლოდ მაშინ, თუ .env-ში სხვა მისამართია მითითებული.
+export const cadastreWmsUrl = import.meta.env.VITE_NAPR_WMS || null;
 export const cadastreLayer  = import.meta.env.VITE_NAPR_LAYER || "ParcelA:RegParcels";
 export const cadastreAvailable = Boolean(cadastreWmsUrl && cadastreLayer);
 
