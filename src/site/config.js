@@ -5,10 +5,17 @@
 
 export const SITE = {
   name: "GeoBid",
-  tagline: "ამზომველის გამოძახება",
+  tagline: "აზომვების აუქციონი",
   phone: "+995 5XX XX XX XX",       // TODO: რეალური ნომერი
   phoneHref: "tel:+9955XXXXXXXX",    // TODO: იგივე ნომერი, ცარიელი ადგილების გარეშე
   email: "info@geobid.ge",           // TODO: რეალური ელფოსტა
   hours: "ორშ–შაბ, 09:00–19:00",     // TODO
   area: "მთელი საქართველო",           // TODO: სად მუშაობთ
+};
+
+// აუქციონის აპის მისამართები (src/views/AuthScreen.jsx კითხულობს ?start=)
+export const APP = {
+  client: "/app?start=reg-client",     // დამკვეთის რეგისტრაცია → შეკვეთის განთავსება
+  surveyor: "/app?start=reg-surveyor", // ამზომველის რეგისტრაცია
+  login: "/app?start=login",
 };

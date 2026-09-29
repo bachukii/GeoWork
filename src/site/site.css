@@ -4,6 +4,9 @@
 
 a.btn, a.btn2 { display: inline-block; text-align: center; text-decoration: none; }
 .lp a { color: inherit; }
+.lp a.btn { color: #fff; }
+.lp a.btn-go { color: #2B2005; }
+.lp a.btn2 { color: var(--navy); }
 .lp a.lp-link { color: var(--sky); font-weight: 600; text-decoration: none; }
 .lp a.lp-link:hover { text-decoration: underline; }
 .lp a.lp-ghost { text-decoration: none; text-align: center; }
@@ -21,7 +24,10 @@ a.btn, a.btn2 { display: inline-block; text-align: center; text-decoration: none
 .sh-nav.open { display: flex; }
 .sh-a { padding: 13px 0; font-weight: 600; font-size: 15.5px; color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--hair); }
 .lp .sh-a.on { color: var(--navy); box-shadow: inset 3px 0 0 var(--gold); padding-left: 12px; }
-.lp .sh-cta { margin-top: 16px; color: #2B2005; }
+.lp .sh-cta { margin-top: 16px; }
+.sh-login { color: var(--navy); }
+.cta-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.cta-btns > * { flex: 1 1 100%; }
 
 /* ---------- გვერდის სათაური ---------- */
 .ph { position: relative; overflow: hidden; background: var(--navy); color: #fff; }
@@ -71,7 +77,6 @@ a.btn, a.btn2 { display: inline-block; text-align: center; text-decoration: none
 .cta-in { position: relative; display: flex; flex-direction: column; gap: 20px; padding-top: 48px; padding-bottom: 48px; }
 .cta-in h2 { margin: 0; font-size: 28px; font-weight: 800; }
 .cta-in p { margin: 8px 0 0; color: rgba(255,255,255,.75); }
-.lp .cta-in .btn { color: #2B2005; }
 
 /* ---------- ჩვენ შესახებ ---------- */
 .about { display: grid; gap: 24px; align-items: start; }
@@ -82,17 +87,9 @@ a.btn, a.btn2 { display: inline-block; text-align: center; text-decoration: none
 .lp .about-card a.btn { width: 100%; color: #fff; }
 .lp .about-card a.btn2 { color: var(--navy); }
 
-/* ---------- განაცხადი ---------- */
+/* ---------- კონტაქტი ---------- */
 .contact { display: grid; gap: 24px; align-items: start; }
-.contact-form { background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 22px; }
-.sf { display: grid; gap: 14px; }
-.sf-row { display: grid; gap: 14px; }
-.sf-f { display: grid; gap: 6px; }
-.sf-note { font-size: 12.5px; color: var(--muted); }
-.sf-done { text-align: center; padding: 24px 8px; }
-.sf-done-t { font-size: 22px; font-weight: 800; color: var(--ok); }
-.sf-done p { color: var(--muted); line-height: 1.6; }
-.sf-done a { color: var(--sky); font-weight: 600; }
+.contact-ctas { display: grid; gap: 16px; }
 .contact-side { background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 22px; }
 .contact-side h3 { margin: 0 0 12px; color: var(--navy); }
 .contact-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--hair); font-size: 14.5px; color: var(--ink); text-decoration: none; }
@@ -133,11 +130,13 @@ a.btn, a.btn2 { display: inline-block; text-align: center; text-decoration: none
   .cta-in { flex-direction: row; justify-content: space-between; align-items: center; padding-top: 64px; padding-bottom: 64px; }
   .cta-in h2 { font-size: 34px; }
   .lp .cta-in .btn { width: auto; padding: 14px 30px; }
+  .cta-btns { flex-wrap: nowrap; }
+  .cta-btns > * { flex: none; }
 
   .about { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 48px; }
-  .contact { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 32px; }
-  .contact-form { padding: 32px; }
-  .sf-row { grid-template-columns: 1fr 1fr; }
+  .contact { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 32px; }
+  .contact-ctas { grid-template-columns: 1fr 1fr; }
+  .sh-login { margin-left: 8px; }
 
   .sfoot-in { grid-template-columns: 1.4fr 1fr 1.4fr 1.2fr; gap: 40px; padding-top: 60px; }
 }

@@ -5,19 +5,27 @@ import { REGIONS, ALL_SERVICES } from "../lib/constants";
 import Logo from "../components/Logo";
 import TriGrid from "../components/TriGrid";
 
+const MODES = ["login", "reg-client", "reg-surveyor"];
+const toSite = () => { window.location.href = "/"; };
+
+// /app?start=reg-client | reg-surveyor | login — საიტის ღილაკებიდან
+function startMode() {
+  const m = new URLSearchParams(window.location.search).get("start");
+  return MODES.includes(m) ? m : "login";
+}
+
 export default function AuthScreen() {
   const { signIn, signUp } = useAuth();
-  const [mode, setMode] = useState("landing"); // landing | login | reg-client | reg-surveyor
+  const [mode, setMode] = useState(startMode); // login | reg-client | reg-surveyor
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
 
-  if (mode === "landing") return <Landing onPick={setMode} />;
   if (mode === "login")
     return (
-      <AuthFrame onHome={() => setMode("landing")}>
-        <Login onBack={() => setMode("landing")} busy={busy} err={err}
-          onSwitch={() => { setErr(""); setMode("reg-client"); }}
+      <AuthFrame onHome={toSite}>
+        <Login onBack={toSite} busy={busy} err={err}
+          onSwitch={(m) => { setErr(""); setMode(m); }}
           onSubmit={async (v) => {
             setErr(""); setBusy(true);
             try { await signIn(v); } catch (e) { setErr(translate(e)); } finally { setBusy(false); }
@@ -27,11 +35,13 @@ export default function AuthScreen() {
 
   const role = mode === "reg-client" ? "client" : "surveyor";
   return (
-    <AuthFrame onHome={() => setMode("landing")}>
+    <AuthFrame onHome={toSite}>
     <Register
+      key={role}
       role={role}
       busy={busy} err={err} info={info}
-      onBack={() => { setErr(""); setInfo(""); setMode("landing"); }}
+      onBack={toSite}
+      onLogin={() => { setErr(""); setInfo(""); setMode("login"); }}
       onSubmit={async (payload) => {
         setErr(""); setInfo(""); setBusy(true);
         try {
@@ -86,136 +96,12 @@ function translate(e) {
   return m;
 }
 
-// ---------------- LANDING ----------------
-// მაგალითის მონაცემები — მხოლოდ ილუსტრაციისთვის
-const DEMO_BIDS = [
-  { who: "ნ. ბერიძე", tag: "Verified", stars: "4.9", days: 2, price: 280 },
-  { who: "GeoLine LLC", tag: "Verified", stars: "4.8", days: 1, price: 340 },
-  { who: "ლ. კაპანაძე", tag: "", stars: "4.6", days: 3, price: 250 },
-];
-
-const STEPS = [
-  { n: "01", t: "აქვეყნებ შეკვეთას", d: "საკადასტრო კოდით ან რუკაზე მონიშვნით. ნაკვეთის საზღვრები საჯარო რეესტრიდან ავტომატურად ჩამოდის." },
-  { n: "02", t: "იღებ დახურულ ფასებს", d: "ამზომველები ფასს ერთმანეთისგან დამოუკიდებლად გიგზავნიან. ერთმანეთის შეთავაზებას ვერავინ ხედავს." },
-  { n: "03", t: "ირჩევ და იღებ ნახაზს", d: "ადარებ ფასს, ვადას და რეიტინგს. ნახაზს PDF/DWG ფორმატში პირდაპირ პლატფორმაზე იღებ." },
-];
-
+// ---------------- შესვლის ფონის პანელი ----------------
 const TRUST = [
   { icon: "lock", t: "დახურული ფასები", d: "დაცულია ბაზის დონეზე — არა მხოლოდ ინტერფეისში." },
   { icon: "pin", t: "საჯარო რეესტრის რუკა", d: "საკადასტრო ნაკვეთი, ორთოფოტო და სატელიტი ერთ ეკრანზე." },
   { icon: "check", t: "ვერიფიცირებული ამზომველები", d: "პროფილს ადმინისტრატორი ამოწმებს; შეფასებას მხოლოდ დამკვეთი წერს." },
 ];
-
-function Landing({ onPick }) {
-  return (
-    <div className="lp">
-      <header className="lp-hero">
-        <TriGrid />
-        <div className="lp-wrap lp-top">
-          <Logo size={24} light />
-          <button className="lp-ghost" onClick={() => onPick("login")}>შესვლა</button>
-        </div>
-
-        <div className="lp-wrap lp-hero-grid">
-          <div>
-            <div className="lp-kicker">გეოდეზიური მომსახურების ბაზარი</div>
-            <h1 className="lp-h1">ამზომველს ეძებ?<br /><span>დაელოდე ფასებს.</span></h1>
-            <p className="lp-lede">
-              აქვეყნებ სამუშაოს. ამზომველები გიგზავნიან ფასს ერთმანეთისგან
-              დამოუკიდებლად — ვერავინ ხედავს, ვინ რამდენი დაწერა. ირჩევ შენ.
-            </p>
-            <div className="lp-cta">
-              <button className="btn btn-go" onClick={() => onPick("reg-client")}>შეკვეთის განთავსება</button>
-              <button className="lp-ghost lp-ghost-lg" onClick={() => onPick("reg-surveyor")}>ამზომველი ვარ</button>
-            </div>
-          </div>
-
-          <div className="lp-demo" aria-label="მაგალითი: შეთავაზებები შეკვეთაზე">
-            <div className="lp-demo-hdr">
-              <div>
-                <div className="lp-demo-t">საკადასტრო აზომვა</div>
-                <div className="lp-demo-s">მცხეთა · 850 მ² · <span className="mono">72.16.01.123</span></div>
-              </div>
-              <span className="lp-pill">3 შეთავაზება</span>
-            </div>
-            {DEMO_BIDS.map((b, i) => (
-              <div className={`lp-bid ${i === 0 ? "best" : ""}`} key={b.who}>
-                <div className="lp-av">{b.who.replace(/[^\p{L}]/gu, "").slice(0, 1)}</div>
-                <div style={{ minWidth: 0 }}>
-                  <div className="lp-bid-who">{b.who}{b.tag && <em>{b.tag}</em>}</div>
-                  <div className="lp-bid-meta">★ {b.stars} · {b.days} დღე</div>
-                </div>
-                <div className="lp-bid-price mono">{b.price} ₾</div>
-              </div>
-            ))}
-            <div className="lp-demo-foot">
-              <Icon name="lock" size={14} /> თითო ამზომველი მხოლოდ საკუთარ ფასს ხედავს
-            </div>
-            <div className="lp-demo-tag">მაგალითი</div>
-          </div>
-        </div>
-      </header>
-
-      <section className="lp-wrap lp-sec">
-        <h2 className="lp-h2">როგორ მუშაობს</h2>
-        <div className="lp-steps">
-          {STEPS.map((x) => (
-            <div className="lp-step" key={x.n}>
-              <div className="lp-step-n mono">{x.n}</div>
-              <h3>{x.t}</h3>
-              <p>{x.d}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="lp-wrap lp-sec" style={{ paddingTop: 0 }}>
-        <div className="lp-roles">
-          <div className="role-card">
-            <div className="glyph"><Icon name="doc" size={26} /></div>
-            <h2>დამკვეთი ვარ</h2>
-            <p>მჭირდება საკადასტრო, ტოპოგრაფიული ან შიდა აზომვა.</p>
-            <ul className="lp-list">
-              <li>რეგისტრაცია — 1 წუთი</li>
-              <li>შეთავაზებების შედარება ერთ ეკრანზე</li>
-              <li>ჩატი არჩეულ ამზომველთან</li>
-            </ul>
-            <button className="btn btn-go" onClick={() => onPick("reg-client")}>შეკვეთის განთავსება</button>
-          </div>
-
-          <div className="role-card">
-            <div className="glyph"><Icon name="ruler" size={26} /></div>
-            <h2>ამზომველი ვარ</h2>
-            <p>გეოდეზისტი ან კომპანია. ვიღებ შეკვეთებს ჩემს რეგიონში.</p>
-            <ul className="lp-list">
-              <li>შეკვეთები მხოლოდ შენს რეგიონებში</li>
-              <li>ნავიგაცია ობიექტამდე ერთი დაჭერით</li>
-              <li>შენს ფასს კონკურენტი ვერ ნახავს</li>
-            </ul>
-            <button className="btn" onClick={() => onPick("reg-surveyor")}>ამზომველად რეგისტრაცია</button>
-          </div>
-        </div>
-      </section>
-
-      <section className="lp-band">
-        <div className="lp-wrap lp-trust">
-          {TRUST.map((x) => (
-            <div key={x.t} className="lp-trust-i">
-              <Icon name={x.icon} size={20} />
-              <div><b>{x.t}</b><span>{x.d}</span></div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <footer className="lp-wrap lp-foot">
-        <Logo size={16} />
-        <span className="muted">GeoBid — GEOID-ის პროდუქტი</span>
-        <button className="lp-link" onClick={() => onPick("login")}>შესვლა</button>
-      </footer>
-    </div>
-  );
-}
 
 // შესვლა / რეგისტრაცია: ფართო ეკრანზე ორი სვეტი
 function AuthFrame({ children, onHome }) {
@@ -261,14 +147,16 @@ function Login({ onBack, onSubmit, onSwitch, busy, err }) {
         {busy ? "შესვლა…" : "შესვლა"}
       </button>
       <div className="muted" style={{ fontSize: 13, textAlign: "center", marginTop: 16 }}>
-        ანგარიში არ გაქვს? <button className="lp-link" onClick={onSwitch}>რეგისტრაცია</button>
+        ანგარიში არ გაქვს? რეგისტრაცია როგორც{" "}
+        <button className="lp-link" onClick={() => onSwitch("reg-client")}>დამკვეთი</button> ან{" "}
+        <button className="lp-link" onClick={() => onSwitch("reg-surveyor")}>ამზომველი</button>
       </div>
     </div>
   );
 }
 
 // ---------------- REGISTER ----------------
-function Register({ role, onBack, onSubmit, busy, err, info }) {
+function Register({ role, onBack, onLogin, onSubmit, busy, err, info }) {
   const isSurveyor = role === "surveyor";
   const [step, setStep] = useState(1);
   const steps = isSurveyor ? 3 : 1;
@@ -346,10 +234,6 @@ function Register({ role, onBack, onSubmit, busy, err, info }) {
             </>
           )}
 
-          <div className="warn" style={{ marginTop: 12 }}>
-            ტელეფონის SMS-დადასტურება ჯერ არ არის ჩართული — ავტორიზაცია ელფოსტით ხდება.
-            SMS-ის ჩასართავად Supabase-ში Twilio/MessageBird უნდა დაუკავშირდეს.
-          </div>
         </div>
       )}
 
@@ -403,6 +287,9 @@ function Register({ role, onBack, onSubmit, busy, err, info }) {
             {busy ? "მიმდინარეობს…" : "რეგისტრაცია"}
           </button>
         )}
+      </div>
+      <div className="muted" style={{ fontSize: 13, textAlign: "center", marginTop: 16 }}>
+        უკვე გაქვს ანგარიში? <button className="lp-link" onClick={onLogin}>შესვლა</button>
       </div>
     </div>
   );

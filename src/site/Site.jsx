@@ -2,9 +2,8 @@ import React, { useEffect, useState } from "react";
 import Logo from "../components/Logo";
 import Icon from "../components/Icon";
 import TriGrid from "../components/TriGrid";
-import OrderForm from "./OrderForm";
 import { Link, usePath, scrollToHash } from "./router";
-import { SITE } from "./config";
+import { SITE, APP } from "./config";
 import { SERVICES, STEPS, WHY, FAQ } from "./content";
 
 const NAV = [
@@ -18,11 +17,11 @@ const TITLES = {
   "/": `${SITE.name} — ${SITE.tagline}`,
   "/services": `მომსახურებები — ${SITE.name}`,
   "/about": `ჩვენ შესახებ — ${SITE.name}`,
-  "/contact": `განაცხადი და კონტაქტი — ${SITE.name}`,
+  "/contact": `კონტაქტი — ${SITE.name}`,
 };
 
 export default function Site() {
-  const { path, search, hash } = usePath();
+  const { path, hash } = usePath();
   const page = TITLES[path] ? path : "404";
 
   useEffect(() => {
@@ -36,7 +35,7 @@ export default function Site() {
         {page === "/" && <Home />}
         {page === "/services" && <Services hash={hash} />}
         {page === "/about" && <About />}
-        {page === "/contact" && <Contact search={search} />}
+        {page === "/contact" && <Contact />}
         {page === "404" && <NotFound />}
       </main>
       <Footer />
@@ -58,7 +57,8 @@ function Header({ path }) {
           {NAV.map((n) => (
             <Link key={n.to} to={n.to} onClick={close} className={`sh-a ${path === n.to ? "on" : ""}`}>{n.label}</Link>
           ))}
-          <Link to="/contact" onClick={close} className="btn btn-go sh-cta">განაცხადი</Link>
+          <a href={APP.login} className="sh-a sh-login">შესვლა</a>
+          <a href={APP.client} className="btn btn-go sh-cta">შეკვეთის განთავსება</a>
         </nav>
         <button className="sh-burger" aria-label="მენიუ" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           <Icon name={open ? "close" : "menu"} size={24} />
@@ -114,16 +114,16 @@ function Home() {
             <div className="lp-kicker">{SITE.tagline} · {SITE.area}</div>
             <h1 className="lp-h1">ამზომველს ეძებ?<br /><span>დაელოდე ფასებს.</span></h1>
             <p className="lp-lede">
-              დატოვე ერთი განაცხადი — ამზომველები ფასს ერთმანეთისგან დამოუკიდებლად
-              გთავაზობენ. ადარებ ფასს, ვადას და შეფასებას. ირჩევ შენ.
+              განათავსე შეკვეთა — ამზომველები ფასს ერთმანეთისგან დამალულად დებენ.
+              ადარებ ფასს, ვადას და შეფასებას. ირჩევ შენ.
             </p>
             <div className="lp-cta">
-              <Link to="/contact" className="btn btn-go">განაცხადის გაგზავნა</Link>
-              <Link to="/services" className="lp-ghost lp-ghost-lg">მომსახურებები</Link>
+              <a href={APP.client} className="btn btn-go">შეკვეთის განთავსება</a>
+              <a href={APP.surveyor} className="lp-ghost lp-ghost-lg">ამზომველი ვარ</a>
             </div>
           </div>
 
-          <div className="lp-demo" aria-label="მაგალითი: შეთავაზებები ერთ განაცხადზე">
+          <div className="lp-demo" aria-label="მაგალითი: შეთავაზებები ერთ შეკვეთაზე">
             <div className="lp-demo-hdr">
               <div>
                 <div className="lp-demo-t">საკადასტრო აზომვითი ნახაზი</div>
@@ -180,7 +180,9 @@ function Home() {
         </div>
       </section>
 
-      <section className="lp-wrap lp-sec">
+      <Roles />
+
+      <section className="lp-wrap lp-sec" style={{ paddingTop: 0 }}>
         <h2 className="lp-h2">რატომ {SITE.name}</h2>
         <div className="lp-trust">
           {WHY.map((x) => (
@@ -209,6 +211,38 @@ function Home() {
   );
 }
 
+function Roles() {
+  return (
+    <section className="lp-wrap lp-sec">
+      <h2 className="lp-h2">აუქციონის ორი მხარე</h2>
+      <div className="lp-roles">
+        <div className="role-card">
+          <div className="glyph"><Icon name="doc" size={26} /></div>
+          <h2>დამკვეთი ვარ</h2>
+          <p>მჭირდება საკადასტრო ნახაზი, გამიჯვნა, ტოპოგრაფია ან ბინის აზომვა.</p>
+          <ul className="lp-list">
+            <li>შეკვეთის განთავსება რამდენიმე წუთში</li>
+            <li>ყველა ფასი ერთ ეკრანზე — ხედავ მხოლოდ შენ</li>
+            <li>ჩატი არჩეულ ამზომველთან, ნახაზი პლატფორმაზე</li>
+          </ul>
+          <a href={APP.client} className="btn btn-go">შეკვეთის განთავსება</a>
+        </div>
+        <div className="role-card">
+          <div className="glyph"><Icon name="ruler" size={26} /></div>
+          <h2>ამზომველი ვარ</h2>
+          <p>გეოდეზისტი ან კომპანია. ვიღებ შეკვეთებს ჩემს რეგიონში.</p>
+          <ul className="lp-list">
+            <li>შეკვეთები მხოლოდ შენს რეგიონებში და მომსახურებებზე</li>
+            <li>შენს ფასს კონკურენტი ვერ ხედავს</li>
+            <li>ნავიგაცია ობიექტამდე ერთი დაჭერით</li>
+          </ul>
+          <a href={APP.surveyor} className="btn">ამზომველად რეგისტრაცია</a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CtaBand() {
   return (
     <section className="cta-band">
@@ -216,9 +250,12 @@ function CtaBand() {
       <div className="lp-wrap cta-in">
         <div>
           <h2>მზად ხარ?</h2>
-          <p>განაცხადს ერთი წუთი სჭირდება. შეთავაზებებს უფასოდ მიიღებ.</p>
+          <p>შეკვეთის განთავსებას რამდენიმე წუთი სჭირდება. ფასებს ამზომველები თავად შემოგთავაზებენ.</p>
         </div>
-        <Link to="/contact" className="btn btn-go">განაცხადის გაგზავნა</Link>
+        <div className="cta-btns">
+          <a href={APP.client} className="btn btn-go">შეკვეთის განთავსება</a>
+          <a href={APP.surveyor} className="lp-ghost lp-ghost-lg">ამზომველი ვარ</a>
+        </div>
       </div>
     </section>
   );
@@ -244,7 +281,7 @@ function Services({ hash }) {
   return (
     <>
       <PageHead title="მომსახურებები"
-        lede="რა სამუშაოებზე შეგიძლია განაცხადის დატოვება, როდის გჭირდება თითოეული და რა უნდა მოამზადო." />
+        lede="რა სამუშაოებზე შეგიძლია შეკვეთის განთავსება, როდის გჭირდება თითოეული და რა უნდა მოამზადო." />
       <section className="lp-wrap lp-sec svc-list">
         {SERVICES.map((s) => (
           <article key={s.slug} id={s.slug} className="svc-item">
@@ -263,9 +300,7 @@ function Services({ hash }) {
                 <ul className="lp-list">{s.need.map((w) => <li key={w}>{w}</li>)}</ul>
               </div>
             </div>
-            <Link to={`/contact?service=${encodeURIComponent(s.slug)}`} className="btn btn-go svc-btn">
-              განაცხადი ამ მომსახურებაზე
-            </Link>
+            <a href={APP.client} className="btn btn-go svc-btn">შეკვეთის განთავსება</a>
           </article>
         ))}
       </section>
@@ -284,8 +319,8 @@ function About() {
           <h2 className="lp-h2">რატომ შევქმენით</h2>
           <p>
             ამზომველის პოვნა დღეს ნაცნობების რჩევით ან ათობით ნომრის დარეკვით ხდება, ფასები კი ერთი და იმავე
-            სამუშაოზე მკვეთრად განსხვავდება. გვინდა, რომ ეს პროცესი მარტივი და გამჭვირვალე იყოს:
-            ერთი განაცხადი, რამდენიმე დამოუკიდებელი ფასი და შენი არჩევანი.
+            სამუშაოზე მკვეთრად განსხვავდება. ამიტომ შევქმენით აუქციონი: ერთი შეკვეთა, რამდენიმე
+            დამოუკიდებელი ფასი და შენი არჩევანი.
           </p>
           <p>
             ამზომველებისთვის კი ეს ახალი შეკვეთების წყაროა — მათ რეგიონში, მათ სპეციალიზაციაზე, სამართლიანი
@@ -298,33 +333,40 @@ function About() {
         </div>
         <div className="about-card">
           <h3>ამზომველი ხარ?</h3>
-          <p>მიიღე შეკვეთები შენს რეგიონში. დაგვიკავშირდი და გაგიზიარებთ, როგორ შემოგვიერთდე.</p>
-          <a href={SITE.phoneHref} className="btn">{SITE.phone}</a>
-          <a href={`mailto:${SITE.email}`} className="btn2" style={{ marginTop: 8, display: "block", textAlign: "center" }}>{SITE.email}</a>
+          <p>მიიღე შეკვეთები შენს რეგიონში და დადე ფასი. შენს ფასს კონკურენტი ვერ ნახავს.</p>
+          <a href={APP.surveyor} className="btn">ამზომველად რეგისტრაცია</a>
+          <a href={`mailto:${SITE.email}`} className="btn2" style={{ marginTop: 8, display: "block", textAlign: "center" }}>კითხვა გაქვს? {SITE.email}</a>
         </div>
       </section>
     </>
   );
 }
 
-// ---------------- კონტაქტი / განაცხადი ----------------
-function Contact({ search }) {
-  const slug = new URLSearchParams(search).get("service");
-  const initial = SERVICES.find((s) => s.slug === slug)?.title || "";
+// ---------------- კონტაქტი ----------------
+function Contact() {
   return (
     <>
-      <PageHead title="განაცხადი" lede="შეავსე ფორმა და ამზომველების შეთავაზებებს მიიღებ. ან დაგვიკავშირდი პირდაპირ." />
+      <PageHead title="კონტაქტი" lede="კითხვა გაქვს აუქციონზე, შეკვეთაზე ან ამზომველად რეგისტრაციაზე? დაგვიკავშირდი." />
       <section className="lp-wrap lp-sec contact">
-        <div className="contact-form">
-          <OrderForm key={initial} initialService={initial} />
-        </div>
         <aside className="contact-side">
-          <h3>კონტაქტი</h3>
+          <h3>დაგვიკავშირდი</h3>
           <a className="contact-row" href={SITE.phoneHref}><Icon name="phone" size={18} /> {SITE.phone}</a>
           <a className="contact-row" href={`mailto:${SITE.email}`}><Icon name="mail" size={18} /> {SITE.email}</a>
           <div className="contact-row"><Icon name="clock" size={18} /> {SITE.hours}</div>
           <div className="contact-row"><Icon name="pin" size={18} /> {SITE.area}</div>
         </aside>
+        <div className="contact-ctas">
+          <div className="about-card">
+            <h3>დამკვეთი ხარ?</h3>
+            <p>განათავსე შეკვეთა და მიიღე ამზომველების ფასები.</p>
+            <a href={APP.client} className="btn btn-go">შეკვეთის განთავსება</a>
+          </div>
+          <div className="about-card">
+            <h3>ამზომველი ხარ?</h3>
+            <p>დარეგისტრირდი და დადე ფასი შენი რეგიონის შეკვეთებზე.</p>
+            <a href={APP.surveyor} className="btn">ამზომველად რეგისტრაცია</a>
+          </div>
+        </div>
       </section>
     </>
   );
