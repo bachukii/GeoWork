@@ -20,6 +20,27 @@
 
 ---
 
+## სტრუქტურა
+
+```
+index.html, package.json, vite.config.js, netlify.toml
+public/          favicon
+src/
+  App.jsx, main.jsx, styles.css
+  components/    UI კომპონენტები (რუკა, ჩატი, გადახდა, ...)
+  views/         დამკვეთის / ამზომველის / ადმინის ეკრანები
+  context/       ავტორიზაცია
+  lib/           supabase, NAPR, გეომეტრია, კონსტანტები
+supabase/        schema.sql + მიგრაციები (v2 → v3 → v4, თანმიმდევრობით)
+docs/            ბრენდი, NAPR-ის რუკა, v2-ის განახლება
+```
+
+> ფაილები **მხოლოდ** შესაბამის საქაღალდეში უნდა აიტვირთოს. თუ GitHub-ზე
+> „Add files via upload"-ით ტვირთავ, ჯერ გადადი სწორ საქაღალდეში
+> (მაგ. `src/components/`), თორემ ფაილი root-ში ჩავარდება და დუბლიკატი გაჩნდება.
+
+---
+
 ## 1. Supabase-ის მომზადება
 
 1. გახსენი [supabase.com](https://supabase.com) → **New project**.
