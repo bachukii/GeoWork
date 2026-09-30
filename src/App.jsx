@@ -67,12 +67,15 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
   return (
     <div className="app">
       {toastMsg && <div className="toast">{toastMsg}</div>}
-      <div className="hdr">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-          <Logo size={24} light sub={roleLabel} />
-          <div className="who"><b>{profile.full_name}</b><span className="mono" style={{ fontSize: 10, opacity: .55 }}>v16</span></div>
+      <header className="hdr apphdr">
+        <a href="/" className="apphdr-logo" aria-label="საიტზე დაბრუნება"><Logo size={21} /></a>
+        <span className="apphdr-role">{roleLabel}</span>
+        <div className="apphdr-user">
+          <span className="apphdr-av" aria-hidden="true">{initials(profile.full_name)}</span>
+          <span className="apphdr-name">{profile.full_name}</span>
+          <button className="apphdr-out" onClick={signOut}>გასვლა</button>
         </div>
-      </div>
+      </header>
       <div className="grid-band" />
 
       {profile.role === "client" && <ClientView toast={toast} />}
@@ -81,6 +84,9 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
     </div>
   );
 }
+
+const initials = (name = "") =>
+  name.trim().split(/\s+/).slice(0, 2).map((w) => w[0] || "").join("").toUpperCase() || "?";
 
 export default function App() {
   return <AuthProvider><Shell /></AuthProvider>;

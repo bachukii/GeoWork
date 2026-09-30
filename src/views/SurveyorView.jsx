@@ -255,6 +255,8 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
   const [busy, setBusy] = useState(false);
 
   const [denied, setDenied] = useState(false);
+  const [declared, setDeclared] = useState(null); // დამკვეთის გამოცხადებული გადახდა
+  const [paying, setPaying] = useState(false);
 
   const load = useCallback(async () => {
     const { data: order } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
@@ -275,6 +277,11 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
     const { data: c } = await supabase.from("profiles").select("id,full_name")
       .eq("id", order.client_id).maybeSingle();
     setClient(c);
+
+    const { data: p } = await supabase.from("payments").select("amount,reference,note,created_at")
+      .eq("order_id", orderId).eq("status", "pending")
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    setDeclared(p || null);
   }, [orderId, me.id]);
 
   useEffect(() => { load(); }, [load]);
@@ -286,6 +293,17 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
     setBusy(false);
     if (error) { toast("შეთავაზება ვერ გაიგზავნა"); return; }
     setForm(false); toast("შეთავაზება გაიგზავნა"); load(); onChanged();
+  };
+
+  // თანხა ჩაირიცხა → დამკვეთი ხედავს გაგზავნილ ნახაზს (migration_v6)
+  const confirmPayment = async () => {
+    if (!window.confirm(`დაადასტურე, რომ ${money(myBid.price)} ჩაგერიცხა. ამის შემდეგ დამკვეთი გაგზავნილ ნახაზს დაინახავს.`)) return;
+    setPaying(true);
+    const { error } = await supabase.rpc("surveyor_confirm_payment", { p_order: orderId });
+    setPaying(false);
+    if (error) { toast("დადასტურება ვერ მოხერხდა"); return; }
+    toast("გადახდა დადასტურდა — ნახაზი დამკვეთისთვის ხელმისაწვდომია");
+    load(); onChanged();
   };
 
   const advance = async () => {
@@ -317,13 +335,6 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
             {o.area > 0 && <Row l="ფართობი" v={`${m2(o.area)}${o.area_source === "manual" ? " (მიახლ.)" : ""}`} mono />}
             <Row l="სასურველი ვადა" v={o.deadline} />
             <Row l="დამკვეთი" v={client?.full_name || "—"} />
-            {o.cadastral_code && (
-              <a className="btn2 btn-sm" href="https://maps.gov.ge/map/portal/" target="_blank" rel="noreferrer"
-                style={{ textDecoration: "none", display: "inline-block", marginTop: 8 }}
-                onClick={() => navigator.clipboard?.writeText(o.cadastral_code).catch(() => {})}>
-                კოდის კოპირება და რეესტრში ნახვა ↗
-              </a>
-            )}
           </div>
 
           {(o.lat || o.polygon) && (
@@ -399,6 +410,23 @@ function OrderSheet({ orderId, me, onClose, onChanged, toast }) {
                   <span className="muted">გადახდა</span>
                   <PayPill s={o.payment_status || "unpaid"} />
                 </div>
+                {o.payment_status !== "confirmed" && (
+                  <>
+                    {declared && (
+                      <div className="warn" style={{ marginTop: 8 }}>
+                        დამკვეთმა გადახდა გამოაცხადა: <b className="mono">{money(declared.amount)}</b>
+                        {declared.reference && <> · № <span className="mono">{declared.reference}</span></>}
+                        . შეამოწმე ანგარიში და დაადასტურე.
+                      </div>
+                    )}
+                    <button className="btn btn-go" style={{ marginTop: 8 }} disabled={paying} onClick={confirmPayment}>
+                      {paying ? "…" : "თანხა ჩამერიცხა — დადასტურება"}
+                    </button>
+                    <div className="muted" style={{ fontSize: 11.5, marginTop: 5 }}>
+                      დადასტურებამდე დამკვეთი ნახაზს ვერ ხედავს.
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="lbl" style={{ marginBottom: 4 }}>ნახაზის მიწოდება</div>

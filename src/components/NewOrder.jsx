@@ -78,15 +78,6 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
             </div>
           )}
 
-          <a className="btn2 btn-sm" href="https://maps.gov.ge/map/portal/" target="_blank" rel="noreferrer"
-            style={{ textDecoration: "none", display: "inline-block", marginTop: 8 }}
-            onClick={() => { if (code.trim()) navigator.clipboard?.writeText(code.trim()).catch(() => {}); }}>
-            {code.trim() ? "კოდის კოპირება და " : ""}საჯარო რეესტრში ნახვა ↗
-          </a>
-          <div className="muted" style={{ fontSize: 11.5, marginTop: 6 }}>
-            რეესტრის რუკაზე იპოვე ნაკვეთი, ნახე მისი საზღვრები და შემდეგ აქ მოხაზე — „კონტურის დახაზვა".
-          </div>
-
           <div className="lbl" style={{ marginTop: 16, marginBottom: 6 }}>ადგილი რუკაზე</div>
           <MapPicker onChange={onGeo} height={320} />
 

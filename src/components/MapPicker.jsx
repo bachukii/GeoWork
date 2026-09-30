@@ -1,12 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { polygonArea, centroid, naprPortalUrl } from "../lib/geo";
+import { polygonArea, centroid } from "../lib/geo";
 import { BASEMAPS, cadastreOverlay, cadastreAvailable } from "../lib/basemaps";
 import LayerSwitch from "./LayerSwitch";
 import { m2 } from "../lib/constants";
-
-const NAPR_PORTAL = "https://maps.gov.ge/map/portal/";
 
 // ნაგულისხმევი ცენტრი — თბილისი
 const DEFAULT_CENTER = [41.7151, 44.8271];
@@ -55,6 +53,9 @@ export default function MapPicker({
     value?.lat ? [value.lat, value.lng] : null
   );
   const [locating, setLocating] = useState(false);
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState(null);   // null | [] | [{name, lat, lng}]
+  const [searching, setSearching] = useState(false);
 
   const area = polygonArea(pts);
 
@@ -168,6 +169,37 @@ export default function MapPicker({
   useEffect(() => { emit(); }, [emit]);
 
   // ---------- ჩემი ადგილმდებარეობა ----------
+  // ---------- ადგილის ძებნა (OpenStreetMap Nominatim) ----------
+  // მისამართი, სოფელი, ქუჩა ან კოორდინატები „41.71, 44.82"
+  const search = async (e) => {
+    e?.preventDefault();
+    const text = q.trim();
+    if (!text) return;
+    const coords = text.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/);
+    if (coords) {
+      goTo({ lat: +coords[1], lng: +coords[2], name: text });
+      return;
+    }
+    setSearching(true);
+    try {
+      const url = "https://nominatim.openstreetmap.org/search?" + new URLSearchParams({
+        q: text, format: "jsonv2", countrycodes: "ge", limit: "6", "accept-language": "ka",
+      });
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const data = res.ok ? await res.json() : [];
+      setHits(data.map((d) => ({ name: d.display_name, lat: +d.lat, lng: +d.lon })));
+    } catch {
+      setHits([]);
+    }
+    setSearching(false);
+  };
+
+  const goTo = (h) => {
+    setHits(null);
+    mapRef.current?.setView([h.lat, h.lng], 18);
+    if (mode === "point") { setCenter([h.lat, h.lng]); setPts([]); }
+  };
+
   const locate = () => {
     if (!navigator.geolocation) return;
     setLocating(true);
@@ -193,18 +225,28 @@ export default function MapPicker({
             <button className={`chip ${mode === "polygon" ? "on" : ""}`}
               onClick={() => { setMode("polygon"); setCenter(null); }}>კონტურის დახაზვა</button>
           </div>
+          <form className="mp-search" onSubmit={search}>
+            <input className="inp" value={q} onChange={(e) => setQ(e.target.value)}
+              placeholder="მოძებნე ადგილი: სოფელი, ქუჩა, მისამართი ან კოორდინატები" />
+            <button className="btn" type="submit" disabled={searching || !q.trim()}>
+              {searching ? "…" : "ძებნა"}
+            </button>
+          </form>
+          {hits && (
+            <div className="mp-hits">
+              {hits.length === 0
+                ? <div className="muted" style={{ padding: "10px 12px", fontSize: 13 }}>ვერაფერი მოიძებნა. სცადე სხვაგვარად ჩაწერა.</div>
+                : hits.map((h, i) => (
+                  <button key={i} type="button" className="mp-hit" onClick={() => goTo(h)}>{h.name}</button>
+                ))}
+            </div>
+          )}
           <LayerSwitch base={base} setBase={setBase} cadastre={cadastre} setCadastre={setCadastre} />
         </>
       )}
 
       <div ref={boxRef} style={{ height, zIndex: 1 }} />
 
-      {BASEMAPS[base].partial && (
-        <div className="warn" style={{ marginTop: 6 }}>
-          ორთოფოტოს დაფარვა ნაწილობრივია (2014, დასავლეთ საქართველო).
-          სხვა რეგიონში ქვედა ფენა ჩანს.
-        </div>
-      )}
 
       {!readOnly && (
         <>
@@ -212,16 +254,6 @@ export default function MapPicker({
             <button className="btn2 btn-sm" onClick={locate} disabled={locating}>
               {locating ? "…" : "ჩემი ადგილი"}
             </button>
-            {(() => {
-              const c = pts.length >= 3 ? centroid(pts) : center;
-              return (
-                <a className="btn2 btn-sm" href={c ? naprPortalUrl(c[0], c[1]) : NAPR_PORTAL}
-                  target="_blank" rel="noreferrer"
-                  style={{ textDecoration: "none", display: "inline-block" }}>
-                  საჯარო რეესტრის რუკა ↗
-                </a>
-              );
-            })()}
             {mode === "polygon" && (
               <>
                 <button className="btn2 btn-sm" onClick={() => setPts((p) => p.slice(0, -1))}

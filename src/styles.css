@@ -12,7 +12,7 @@
   --navy:   #133A5E;   /* ბრენდი — ტექსტი, სტრუქტურა */
   --sky:    #2E7DC2;   /* მეორეული — ბმული, მიმდინარე */
   --gold:   #D9A21B;   /* აქცენტი — თითო ეკრანზე ერთხელ */
-  --canvas: #F4F5F3;   /* ფონი */
+  --canvas: #F3F5F8;   /* ფონი */
 
   --surface: #FFFFFF;
   --hair:    #E2E5E1;   /* ნაზი ხაზი */
@@ -24,7 +24,7 @@
   --warn: #B07407;
   --bad:  #BC3B2C;
 
-  --r: 3px;
+  --r: 8px;
   --shell: 1340px;
   --rail: 232px;
 }
@@ -381,4 +381,120 @@ body {
   .af-points svg { color: var(--gold); }
   .af-main { display: flex; align-items: center; padding: 48px; }
   .af-form { width: 100%; }
+}
+
+
+/* ============================================================
+   აპის ახალი იერი (კაბინეტები) — ზემოთა წესებს აზუსტებს
+   ============================================================ */
+:root {
+  --shadow-1: 0 1px 2px rgba(16, 40, 64, .05);
+  --shadow-2: 0 8px 24px rgba(16, 40, 64, .09);
+  --r-lg: 12px;
+}
+
+/* ზედა ზოლი */
+.apphdr {
+  background: var(--surface); color: var(--ink);
+  border-bottom: 1px solid var(--hair);
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; position: sticky; top: 0; z-index: 30;
+}
+.apphdr-logo { text-decoration: none; display: flex; }
+.apphdr-role {
+  font-size: 12px; font-weight: 600; color: var(--navy);
+  background: #EAF1F8; border-radius: 99px; padding: 4px 10px; white-space: nowrap;
+}
+.apphdr-user { margin-left: auto; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.apphdr-av {
+  width: 34px; height: 34px; border-radius: 50%; flex: none;
+  background: var(--navy); color: #fff; display: grid; place-items: center;
+  font-size: 13px; font-weight: 700;
+}
+.apphdr-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: none; }
+.apphdr-out {
+  background: none; border: 1px solid var(--hair-2); border-radius: var(--r);
+  padding: 7px 12px; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.apphdr-out:hover { color: var(--bad); border-color: #E8C4BE; }
+@media (max-width: 520px) { .apphdr-role { display: none; } }
+
+/* ბარათები */
+.card { border-radius: var(--r-lg); padding: 18px; box-shadow: var(--shadow-1); }
+.tick { box-shadow: var(--shadow-1); border-left: 3px solid var(--gold); }
+button.card { font: inherit; color: inherit; transition: border-color .15s, box-shadow .15s, transform .15s; }
+button.card:hover { border-color: #BFCAD6; box-shadow: var(--shadow-2); transform: translateY(-1px); }
+button.card.tick:hover { border-left-color: var(--gold); }
+
+/* სტატუსები */
+.pill { border-radius: 99px; padding: 4px 10px; font-size: 11.5px; align-self: center; }
+
+/* ღილაკები და ველები */
+.btn, .btn2 { border-radius: var(--r); transition: background .15s, border-color .15s, box-shadow .15s; }
+.btn-go { box-shadow: 0 2px 8px rgba(217, 162, 27, .28); }
+.btn-go:disabled { box-shadow: none; }
+.inp, textarea.inp, select.inp { border-radius: var(--r); }
+.chip { border-radius: var(--r); transition: border-color .15s, background .15s; }
+.chip.on { box-shadow: 0 2px 6px rgba(19, 58, 94, .18); }
+
+/* სტატისტიკა */
+.stat .n { font-size: 30px; }
+.stat .t { font-size: 12px; font-weight: 500; }
+
+/* სექციის სათაურები (views იყენებს .lbl-ს) */
+.shell-body .lbl { letter-spacing: .01em; }
+
+/* ქვედა ნავიგაცია (ტელეფონი) */
+.nav { box-shadow: 0 -4px 16px rgba(16, 40, 64, .06); }
+.navbtn { position: relative; font-size: 11px; padding: 10px 2px 9px; }
+.navbtn.on::before {
+  content: ""; position: absolute; top: 0; left: 30%; right: 30%;
+  height: 3px; border-radius: 0 0 3px 3px; background: var(--gold);
+}
+
+/* ფურცელი (შეკვეთის დეტალები) */
+.scrim { background: rgba(14, 44, 72, .45); backdrop-filter: blur(2px); }
+.sheet { border-radius: 16px 16px 0 0; box-shadow: var(--shadow-2); }
+.sheet-hdr { border-radius: 16px 16px 0 0; padding: 16px 18px; }
+.sheet-hdr .t { font-size: 17px; }
+.sheet-inner { padding: 0 18px; }
+
+/* შეტყობინებები */
+.toast { border-radius: 10px; padding: 12px 18px; }
+.err, .ok, .warn { border-radius: var(--r); }
+
+/* რუკის ძებნა */
+.mp-search { display: flex; gap: 8px; margin-bottom: 8px; }
+.mp-search .inp { margin-top: 0; }
+.mp-search .btn { width: auto; flex: none; padding: 0 18px; }
+.mp-hits {
+  background: var(--surface); border: 1px solid var(--hair); border-radius: var(--r);
+  box-shadow: var(--shadow-2); margin: -2px 0 10px; overflow: hidden;
+}
+.mp-hit {
+  display: block; width: 100%; text-align: left; background: none; border: none;
+  border-bottom: 1px solid var(--hair); padding: 10px 12px; font: inherit; font-size: 13px;
+  color: var(--ink); cursor: pointer;
+}
+.mp-hit:last-child { border-bottom: none; }
+.mp-hit:hover { background: #F1F5F9; }
+.leaflet-container { border-radius: var(--r-lg); }
+
+@media (min-width: 900px) {
+  body { background: var(--canvas); }
+  .app:not(.app-solo) {
+    max-width: none; border: none;
+    grid-template-columns: 248px 1fr;
+  }
+  .apphdr { padding: 12px 28px; }
+  .apphdr-name { display: block; }
+  .nav { background: var(--surface); padding: 18px 12px; gap: 4px; box-shadow: none; border-right: 1px solid var(--hair); }
+  .navbtn { border-radius: 10px; padding: 11px 14px; font-size: 14px; }
+  .navbtn:hover { background: #F1F5F9; color: var(--navy); }
+  .navbtn.on { background: #EAF1F8; box-shadow: none; }
+  .navbtn.on::before { display: none; }
+  .shell-body { padding: 32px 40px 56px; max-width: 1080px; width: 100%; }
+  .shell-body > div { padding: 0 !important; }
+  .sheet { border-radius: 0; max-width: 600px; }
+  .sheet-hdr { border-radius: 0; }
 }
