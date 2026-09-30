@@ -31,7 +31,7 @@ src/
   views/         დამკვეთის / ამზომველის / ადმინის ეკრანები
   context/       ავტორიზაცია
   lib/           supabase, NAPR, გეომეტრია, კონსტანტები
-supabase/        schema.sql + მიგრაციები (v2 → v3 → v4 → v5, თანმიმდევრობით)
+supabase/        schema.sql + მიგრაციები (v2 → … → v6, თანმიმდევრობით)
 docs/            ბრენდი, NAPR-ის რუკა, v2-ის განახლება
 ```
 
@@ -46,7 +46,7 @@ docs/            ბრენდი, NAPR-ის რუკა, v2-ის გა�
 1. გახსენი [supabase.com](https://supabase.com) → **New project**.
 2. პროექტში: **SQL Editor** → **New query** → ჩააკოპირე და გაუშვი (**Run**)
    თანმიმდევრობით: `supabase/schema.sql`, `migration_v2.sql`, `migration_v3.sql`,
-   `migration_v4.sql`, `migration_v5.sql`.
+   `migration_v4.sql`, `migration_v5.sql`, `migration_v6.sql`.
 3. **Authentication → Providers → Email**: „Confirm email" შეგიძლია ჩართულიც
    დატოვო. პროფილს ბაზა ქმნის trigger-ით (`migration_v5.sql`), ამიტომ
    რეგისტრაცია დადასტურების გარეშეც და დადასტურებითაც მუშაობს.

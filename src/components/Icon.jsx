@@ -50,6 +50,16 @@ const paths = {
   eyeOff: <><path d="M4 4l16 16" {...P} /><path d="M9.9 5.2A9.8 9.8 0 0 1 12 5c6.4 0 10 6 10 6a17 17 0 0 1-3.3 3.9" {...P} /><path d="M6.3 7.3A17 17 0 0 0 2 11s3.6 6 10 6a9.7 9.7 0 0 0 4-.85" {...P} /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" {...P} /></>,
   // უკან
   back: <><path d="M14 6l-6 6 6 6" {...P} /></>,
+
+  menu: <><path d="M4 7h16M4 12h16M4 17h16" {...P} /></>,
+
+  clock: <><circle cx="12" cy="12" r="8.5" {...P} /><path d="M12 7.5V12l3 2" {...P} /></>,
+
+  phone: <><path d="M6.5 3.5h3l1.5 4-2 1.3a10 10 0 0 0 6.2 6.2l1.3-2 4 1.5v3a2 2 0 0 1-2 2A15.5 15.5 0 0 1 4.5 5.5a2 2 0 0 1 2-2z" {...P} /></>,
+
+  mail: <><rect x="3" y="5.5" width="18" height="13" rx="1.5" {...P} /><path d="m3.5 7 8.5 6 8.5-6" {...P} /></>,
+
+  building: <><path d="M5 21V4h10v17M15 9h4v12" {...P} /><path d="M3 21h18M8 8h1.5M10.5 8H12M8 12h1.5M10.5 12H12M8 16h1.5M10.5 16H12" {...P} /></>,
 };
 
 export default function Icon({ name, size = 20, style }) {
