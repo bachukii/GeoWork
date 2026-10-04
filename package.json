@@ -1,21 +1,12 @@
 {
-  "name": "geobid",
+  "name": "savele-azomva-apk",
+  "version": "2.1.9",
   "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
+  "description": "საველე აზომვა — Android აპი (Capacitor) Bluetooth GNSS მიმღების მხარდაჭერით",
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "leaflet": "^1.9.4"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.0"
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor-community/bluetooth-le": "6.1.0"
   }
 }
