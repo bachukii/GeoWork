@@ -1,0 +1,16 @@
+package ge.kadastr.savele;
+
+import android.os.Bundle;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(NmeaBluetoothPlugin.class);
+        registerPlugin(SystemLocationPlugin.class);
+        registerPlugin(FileOutPlugin.class);
+        registerPlugin(DistoBlePlugin.class);
+        super.onCreate(savedInstanceState);
+    }
+}
