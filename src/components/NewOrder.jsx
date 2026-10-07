@@ -23,7 +23,8 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
   const onGeo = useCallback((g) => setGeo(g), []);
 
   // კოდით ძებნა საჯარო რეესტრში → ნაკვეთი რუკაზე
-  const [found, setFound] = useState(null);     // { outer, bbox, area, code }
+  const [found, setFound] = useState(null);     // { outer, bbox, area, code } — კოდით ნაპოვნი
+  const [picked, setPicked] = useState(null);   // რუკაზე დაჭერით არჩეული
   const [finding, setFinding] = useState(false);
   const [findMsg, setFindMsg] = useState(null);  // { kind, text }
   const findCode = async () => {
@@ -50,7 +51,7 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
   const publish = () => onPublish({
     category: cat, service: svc, region, place,
     cadastral_code: code.trim() || null,
-    area: found?.area || area, area_source: found?.area ? "cadastral" : "manual",
+    area: (found || picked)?.area || area, area_source: (found || picked)?.area ? "cadastral" : "manual",
     lat: geo.lat, lng: geo.lng, polygon: geo.polygon,
     photos, description: desc.trim() || null,
     deadline: dl === "კონკრეტული თარიღი" ? (dlDate || dl) : dl,
@@ -115,13 +116,18 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
           )}
 
           <div className="lbl" style={{ marginTop: 16, marginBottom: 6 }}>ადგილი რუკაზე</div>
-          <MapPicker onChange={onGeo} parcel={found} height={320} />
+          <MapPicker onChange={onGeo} parcel={found} height={360}
+            onParcelPick={(p) => {
+              setFound(null);
+              if (p.code) { setCode(p.code); setFindMsg(null); }
+              setPicked(p);
+            }} />
 
-          {(geo.area > 0 || codeOk) && (
+          {(geo.area > 0 || codeOk || picked) && (
             <div className="card tick" style={{ marginTop: 10 }}>
               {codeOk && <Row l="საკადასტრო კოდი" v={code.trim()} mono />}
-              {found?.area
-                ? <Row l="ფართობი (რეესტრი)" v={m2(found.area)} mono />
+              {(found || picked)?.area
+                ? <Row l="ფართობი (რეესტრი)" v={m2((found || picked).area)} mono />
                 : geo.area > 0 && <Row l="ფართობი (მიახლოებით)" v={m2(geo.area)} mono />}
             </div>
           )}

@@ -1,7 +1,8 @@
 import L from "leaflet";
 
-// რუკის ფენები: OpenStreetMap და Esri-ის სატელიტი.
-// საჯარო რეესტრის ფენები (ორთოფოტო, ნაკვეთები) ამოღებულია — NAPR-ის სერვერები დახურულია.
+// რუკის ფენები: OpenStreetMap, Esri-ის სატელიტი, საჯარო რეესტრის ორთოფოტო
+// და საკადასტრო ფენა (nv.napr.gov.ge / mp.napr.gov.ge — იგივე, რასაც „საველე აზომვა" იყენებს).
+// WMS-ის სურათებს ბრაუზერი პირდაპირ ტვირთავს — CORS მათზე არ მოქმედებს, proxy არ სჭირდება.
 
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
@@ -19,6 +20,14 @@ export const BASEMAPS = {
       { maxZoom: 19, attribution: "Esri" }
     ),
   },
+  ortho: {
+    label: "ორთოფოტო",
+    make: () => L.tileLayer.wms("https://mp.napr.gov.ge/WBR/service", {
+      layers: "WBR", format: "image/jpeg", transparent: false, version: "1.3.0",
+      maxZoom: 20, attribution: "ორთოფოტო: საჯარო რეესტრი",
+    }),
+    under: "sat",
+  },
   ...(GOOGLE_KEY ? {
     google: {
       label: "Google",
@@ -30,13 +39,9 @@ export const BASEMAPS = {
   } : {}),
 };
 
-// საკადასტრო ნაკვეთების ფენა.
-// NAPR-ის GeoServer დახურულია ("Access Denied"), ამიტომ ჩაირთვება
-// მხოლოდ მაშინ, როცა .env-ში საკუთარ endpoint-ს მიუთითებ.
-// საჯარო რეესტრის WMS (gpv0.napr.gov.ge) საჯაროდ დახურულია („Access Denied"),
-// ამიტომ ფენა ჩაირთვება მხოლოდ მაშინ, თუ .env-ში სხვა მისამართია მითითებული.
-export const cadastreWmsUrl = import.meta.env.VITE_NAPR_WMS || null;
-export const cadastreLayer  = import.meta.env.VITE_NAPR_LAYER || "ParcelA:RegParcels";
+// საკადასტრო ფენა — ნაკვეთები და შენობები
+export const cadastreWmsUrl = import.meta.env.VITE_NAPR_WMS || "https://nv.napr.gov.ge/geoserver/wms";
+export const cadastreLayer  = import.meta.env.VITE_NAPR_LAYER || "NG_REG_LAYER";
 export const cadastreAvailable = Boolean(cadastreWmsUrl && cadastreLayer);
 
 export function cadastreOverlay() {
@@ -45,9 +50,10 @@ export function cadastreOverlay() {
     layers: cadastreLayer,
     format: "image/png",
     transparent: true,
-    version: "1.1.0",
+    version: "1.3.0",
     maxZoom: 20,
-    opacity: 0.85,
+    minZoom: 14,
+    opacity: 0.95,
     attribution: "საკადასტრო მონაცემები: საჯარო რეესტრი",
   });
 }

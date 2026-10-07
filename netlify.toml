@@ -17,6 +17,13 @@
 # ბრაუზერი NAPR-ს პირდაპირ ვერ მიმართავს (CORS), ამიტომ Netlify-ით მივდივართ.
 # რომელი მისამართი პასუხობს, ზუსტად უცნობია — საიტი რიგრიგობით ცდის
 # (src/lib/napr.js → PARCEL_WFS_LIST) და მომუშავეს იმახსოვრებს.
+# საკადასტრო WMS — ნაკვეთზე დაჭერისას GetFeatureInfo (fetch-ს CORS სჭირდება)
+[[redirects]]
+  from = "/napr/cad"
+  to = "https://nv.napr.gov.ge/geoserver/wms"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/napr/wfs1"
   to = "https://nv.napr.gov.ge/geoserver/wfs"

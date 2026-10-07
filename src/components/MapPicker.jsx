@@ -5,6 +5,7 @@ import { polygonArea, centroid } from "../lib/geo";
 import { BASEMAPS, cadastreOverlay, cadastreAvailable } from "../lib/basemaps";
 import LayerSwitch from "./LayerSwitch";
 import { m2 } from "../lib/constants";
+import { parcelAt } from "../lib/napr";
 
 // ნაგულისხმევი ცენტრი — თბილისი
 const DEFAULT_CENTER = [41.7151, 44.8271];
@@ -34,6 +35,7 @@ export default function MapPicker({
   height = 300,
   readOnly = false,
   parcel,                // რეესტრიდან ნაპოვნი ნაკვეთი { outer, bbox }
+  onParcelPick,          // (parcel) => void — რუკაზე დაჭერით არჩეული ნაკვეთი
 }) {
   const boxRef = useRef(null);
   const mapRef = useRef(null);
@@ -43,9 +45,11 @@ export default function MapPicker({
 
   // საჯარო რეესტრის მონაცემთა სერვისი (gpv0.napr.gov.ge) დახურულია —
   // ნაკვეთს ავტომატურად ვეღარ ვიღებთ. დამკვეთი ნიშნავს წერტილს ან ხაზავს კონტურს.
-  const [mode, setMode] = useState(value?.polygon?.length ? "polygon" : "point"); // point | polygon
+  const [mode, setMode] = useState(value?.polygon?.length ? "polygon" : "parcel"); // parcel | point | polygon
+  const [picking, setPicking] = useState(false);
+  const [pickMsg, setPickMsg] = useState(null);
   const [base, setBase] = useState("sat");
-  const [cadastre, setCadastre] = useState(false);
+  const [cadastre, setCadastre] = useState(cadastreAvailable);
   const baseRef = useRef(null);
   const underRef = useRef(null);
   const cadRef = useRef(null);
@@ -116,13 +120,31 @@ export default function MapPicker({
     const map = mapRef.current;
     if (!map || readOnly) return;
 
-    const onClick = (e) => {
+    const onClick = async (e) => {
       const p = [e.latlng.lat, e.latlng.lng];
       if (mode === "point") {
         setCenter(p);
         setPts([]);
-      } else {
+      } else if (mode === "polygon") {
         setPts((prev) => [...prev, p]);
+      } else {
+        // ნაკვეთის არჩევა საჯარო რეესტრიდან
+        if (map.getZoom() < 15) { setPickMsg({ kind: "warn", text: "ჯერ რუკა მიუახლოვე ნაკვეთს, შემდეგ დააჭირე." }); return; }
+        setPicking(true); setPickMsg(null);
+        const r = await parcelAt(map, e.latlng).catch(() => ({ ok: false, reason: "blocked" }));
+        setPicking(false);
+        if (r.ok) {
+          setCenter(null);
+          setPts(r.parcel.outer);
+          setPickMsg({ kind: "ok", text: `ნაკვეთი არჩეულია${r.parcel.code ? ` · ${r.parcel.code}` : ""}${r.parcel.area ? ` · ${m2(r.parcel.area)}` : ""}` });
+          onParcelPick?.(r.parcel);
+        } else {
+          setPickMsg({
+            kind: "warn",
+            text: r.reason === "notfound" ? "ამ ადგილას ნაკვეთი ვერ მოიძებნა." : "რეესტრმა არ უპასუხა. მოხაზე ნაკვეთი ხელით („კონტურის დახაზვა“).",
+            detail: r.detail,
+          });
+        }
       }
     };
     map.on("click", onClick);
@@ -229,11 +251,13 @@ export default function MapPicker({
     <div>
       {!readOnly && (
         <>
-          <div className="grid2" style={{ marginBottom: 8 }}>
+          <div className="grid3" style={{ gap: 8, marginBottom: 8 }}>
+            <button className={`chip ${mode === "parcel" ? "on" : ""}`}
+              onClick={() => { setMode("parcel"); setCadastre(true); }}>ნაკვეთის არჩევა</button>
             <button className={`chip ${mode === "point" ? "on" : ""}`}
-              onClick={() => setMode("point")}>წერტილის დასმა</button>
+              onClick={() => setMode("point")}>წერტილი</button>
             <button className={`chip ${mode === "polygon" ? "on" : ""}`}
-              onClick={() => { setMode("polygon"); setCenter(null); }}>კონტურის დახაზვა</button>
+              onClick={() => { setMode("polygon"); setCenter(null); setPts([]); }}>კონტურის დახაზვა</button>
           </div>
           <form className="mp-search" onSubmit={search}>
             <input className="inp" value={q} onChange={(e) => setQ(e.target.value)}
@@ -274,8 +298,25 @@ export default function MapPicker({
             )}
           </div>
 
+          {pickMsg && (
+            <div className={pickMsg.kind} style={{ marginTop: 8, marginBottom: 0 }}>
+              {pickMsg.text}
+              {pickMsg.detail && (
+                <details style={{ marginTop: 6 }}>
+                  <summary style={{ cursor: "pointer", fontSize: 11.5 }}>ტექნიკური დეტალები</summary>
+                  <div className="mono" style={{ fontSize: 10.5, marginTop: 4 }}>{pickMsg.detail}</div>
+                </details>
+              )}
+            </div>
+          )}
+
           <div className="card" style={{ marginTop: 8, fontSize: 12.5 }}>
-            {mode === "point" ? (
+            {mode === "parcel" ? (
+              picking ? <span className="muted">საჯარო რეესტრს ვეკითხები…</span>
+              : pts.length >= 3
+                ? <>ნაკვეთი მონიშნულია · <b className="mono">≈ {m2(Math.round(area))}</b></>
+                : <span className="muted">მიუახლოვე რუკა და დააჭირე ნაკვეთს — საზღვრები საჯარო რეესტრიდან ჩამოვა</span>
+            ) : mode === "point" ? (
               center
                 ? <>მონიშნულია: <span className="mono">{center[0].toFixed(5)}, {center[1].toFixed(5)}</span></>
                 : <span className="muted">დააჭირე რუკაზე ობიექტის ადგილის მოსანიშნად</span>
