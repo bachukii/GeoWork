@@ -3,7 +3,7 @@ import Icon from "./Icon";
 import { Sheet, Row } from "./UI";
 import MapPicker from "./MapPicker";
 import { PhotoUpload } from "./Photos";
-import { isValidCode } from "../lib/napr";
+import { isValidCode, findParcelByCode, findText } from "../lib/napr";
 import { SERVICE_GROUPS, REGIONS, DEADLINES, m2 } from "../lib/constants";
 
 export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
@@ -22,6 +22,23 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
 
   const onGeo = useCallback((g) => setGeo(g), []);
 
+  // კოდით ძებნა საჯარო რეესტრში → ნაკვეთი რუკაზე
+  const [found, setFound] = useState(null);     // { outer, bbox, area, code }
+  const [finding, setFinding] = useState(false);
+  const [findMsg, setFindMsg] = useState(null);  // { kind, text }
+  const findCode = async () => {
+    setFinding(true); setFindMsg(null);
+    const r = await findParcelByCode(code).catch(() => ({ ok: false, reason: "blocked" }));
+    setFinding(false);
+    if (r.ok) {
+      setFound(r.parcel);
+      if (r.parcel.code) setCode(r.parcel.code);
+      setFindMsg({ kind: "ok", text: `ნაკვეთი ნაპოვნია${r.parcel.area ? ` · ${m2(r.parcel.area)}` : ""}` });
+    } else {
+      setFindMsg({ kind: "warn", text: findText[r.reason] || findText.blocked });
+    }
+  };
+
   const codeOk = isValidCode(code);
   const canNext =
     step === 1 ? !!svc :
@@ -33,7 +50,7 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
   const publish = () => onPublish({
     category: cat, service: svc, region, place,
     cadastral_code: code.trim() || null,
-    area, area_source: "manual",
+    area: found?.area || area, area_source: found?.area ? "cadastral" : "manual",
     lat: geo.lat, lng: geo.lng, polygon: geo.polygon,
     photos, description: desc.trim() || null,
     deadline: dl === "კონკრეტული თარიღი" ? (dlDate || dl) : dl,
@@ -66,8 +83,15 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
       {step === 2 && (
         <div>
           <div className="lbl">საკადასტრო კოდი</div>
-          <input className="inp mono" placeholder="01.72.14.031.045" value={code}
-            onChange={(e) => setCode(e.target.value)} />
+          <form className="mp-search" style={{ marginTop: 6, marginBottom: 0 }}
+            onSubmit={(e) => { e.preventDefault(); if (codeOk) findCode(); }}>
+            <input className="inp mono" placeholder="01.72.14.031.045" value={code}
+              onChange={(e) => { setCode(e.target.value); setFindMsg(null); }} />
+            <button className="btn btn-go" type="submit" disabled={!codeOk || finding}>
+              {finding ? "იძებნება…" : "ძებნა"}
+            </button>
+          </form>
+          {findMsg && <div className={findMsg.kind} style={{ marginTop: 8, marginBottom: 0 }}>{findMsg.text}</div>}
           {code.trim() && !codeOk ? (
             <div style={{ fontSize: 11.5, marginTop: 5, color: "var(--warn)" }}>
               ფორმატი: 01.72.14.031.045 (ბინისთვის: 01.72.14.031.045.01.500)
@@ -79,12 +103,14 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
           )}
 
           <div className="lbl" style={{ marginTop: 16, marginBottom: 6 }}>ადგილი რუკაზე</div>
-          <MapPicker onChange={onGeo} height={320} />
+          <MapPicker onChange={onGeo} parcel={found} height={320} />
 
           {(geo.area > 0 || codeOk) && (
             <div className="card tick" style={{ marginTop: 10 }}>
               {codeOk && <Row l="საკადასტრო კოდი" v={code.trim()} mono />}
-              {geo.area > 0 && <Row l="ფართობი (მიახლოებით)" v={m2(geo.area)} mono />}
+              {found?.area
+                ? <Row l="ფართობი (რეესტრი)" v={m2(found.area)} mono />
+                : geo.area > 0 && <Row l="ფართობი (მიახლოებით)" v={m2(geo.area)} mono />}
             </div>
           )}
           {!canNext && (

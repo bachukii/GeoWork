@@ -13,6 +13,14 @@
 # ⚠️ ეს წესები SPA-ს catch-all-ზე ზემოთ უნდა იყოს.
 # ============================================================
 
+# საჯარო რეესტრის ნაკვეთების WFS (SLRWFS:LR_PARCELS_38) — კოდით ძებნისთვის.
+# ბრაუზერი nv.napr.gov.ge-ს პირდაპირ ვერ მიმართავს (CORS), ამიტომ Netlify-ით მივდივართ.
+[[redirects]]
+  from = "/napr/wfs"
+  to = "https://nv.napr.gov.ge/geoserver/wfs"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/napr-tiles/*"
   to = "http://mp1.napr.gov.ge/:splat"

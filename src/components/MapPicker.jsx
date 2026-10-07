@@ -33,6 +33,7 @@ export default function MapPicker({
   onChange,
   height = 300,
   readOnly = false,
+  parcel,                // რეესტრიდან ნაპოვნი ნაკვეთი { outer, bbox }
 }) {
   const boxRef = useRef(null);
   const mapRef = useRef(null);
@@ -154,6 +155,15 @@ export default function MapPicker({
       pts.forEach((p) => L.marker(p, { icon: vertexIcon }).addTo(vertexLayerRef.current));
     }
   }, [pts, readOnly]);
+
+  // ---------- რეესტრიდან ნაპოვნი ნაკვეთი ----------
+  useEffect(() => {
+    if (!parcel?.outer?.length) return;
+    setMode("polygon");
+    setCenter(null);
+    setPts(parcel.outer);
+    mapRef.current?.fitBounds(parcel.bbox, { padding: [28, 28], maxZoom: 19 });
+  }, [parcel]);
 
   // ---------- ცვლილების ამოტანა ზემოთ ----------
   const emit = useCallback(() => {
