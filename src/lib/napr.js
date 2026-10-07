@@ -186,11 +186,8 @@ export const reasonText = {
 // პასუხი UTM 38N-შია (EPSG:32638) — რუკისთვის WGS84-ში გადაგვყავს.
 // ============================================================
 
-// netlify.toml-ის proxy-ები; .env-ში VITE_NAPR_PARCEL_WFS-ით ზუსტი მისამართის მითითებაც შეიძლება
-const PARCEL_WFS_LIST = [
-  import.meta.env.VITE_NAPR_PARCEL_WFS,
-  "/napr/wfs1", "/napr/wfs2", "/napr/wfs3", "/napr/wfs4",
-].filter(Boolean);
+// /napr/wfs → Netlify Function (netlify/functions/napr-wfs.mjs), რომელიც NAPR-ს პაროლით მიმართავს
+const PARCEL_WFS_LIST = [import.meta.env.VITE_NAPR_PARCEL_WFS || "/napr/wfs"];
 let workingWfs = null;
 const PARCEL_LAYER = "SLRWFS:LR_PARCELS_38";
 
