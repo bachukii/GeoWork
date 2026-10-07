@@ -6,6 +6,7 @@ import SurveyorView from "./views/SurveyorView";
 import AdminView from "./views/AdminView";
 import { Spinner } from "./components/UI";
 import Logo from "./components/Logo";
+import TriGrid from "./components/TriGrid";
 
 export const APP_VERSION = "v16";
 
@@ -76,6 +77,14 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
           <button className="apphdr-out" onClick={signOut}>გასვლა</button>
         </div>
       </header>
+      <section className="apphero">
+        <TriGrid />
+        <div className="apphero-in">
+          <div className="apphero-kicker">{roleLabel}</div>
+          <h1>გამარჯობა, {firstName(profile.full_name)}</h1>
+          <p>{HERO_TEXT[profile.role] || ""}</p>
+        </div>
+      </section>
       <div className="grid-band" />
 
       {profile.role === "client" && <ClientView toast={toast} />}
@@ -84,6 +93,14 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
     </div>
   );
 }
+
+const firstName = (name = "") => name.trim().split(/\s+/)[0] || "";
+
+const HERO_TEXT = {
+  client: "აქ განათავსებ შეკვეთებს, ადარებ ამზომველების ფასებს და იღებ ნახაზებს.",
+  surveyor: "აქ ნახავ ახალ შეკვეთებს შენს რეგიონში, დებ ფასს და მართავ სამუშაოებს.",
+  admin: "პლატფორმის მართვა: მომხმარებლები, შეკვეთები, გადახდები და საჩივრები.",
+};
 
 const initials = (name = "") =>
   name.trim().split(/\s+/).slice(0, 2).map((w) => w[0] || "").join("").toUpperCase() || "?";
