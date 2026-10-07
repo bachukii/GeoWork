@@ -186,14 +186,36 @@ export const reasonText = {
 // პასუხი UTM 38N-შია (EPSG:32638) — რუკისთვის WGS84-ში გადაგვყავს.
 // ============================================================
 
-const PARCEL_WFS = import.meta.env.VITE_NAPR_PARCEL_WFS || "/napr/wfs";
+// netlify.toml-ის proxy-ები; .env-ში VITE_NAPR_PARCEL_WFS-ით ზუსტი მისამართის მითითებაც შეიძლება
+const PARCEL_WFS_LIST = [
+  import.meta.env.VITE_NAPR_PARCEL_WFS,
+  "/napr/wfs1", "/napr/wfs2", "/napr/wfs3", "/napr/wfs4",
+].filter(Boolean);
+let workingWfs = null;
 const PARCEL_LAYER = "SLRWFS:LR_PARCELS_38";
 
 const cqlEsc = (s) => String(s).replace(/'/g, "''");
 
+// რიგრიგობით ვცდით proxy-ებს; პირველი მომუშავე იმახსოვრება
 async function parcelQuery(cql, signal) {
+  const order = workingWfs ? [workingWfs, ...PARCEL_WFS_LIST.filter((u) => u !== workingWfs)] : PARCEL_WFS_LIST;
+  const errors = [];
+  for (const base of order) {
+    try {
+      const feats = await parcelQueryAt(base, cql, signal);
+      workingWfs = base;
+      return feats;
+    } catch (e) {
+      if (e.name === "AbortError") throw e;
+      errors.push(`${base}: ${e.message}`);
+    }
+  }
+  throw new Error(errors.join(" | "));
+}
+
+async function parcelQueryAt(base, cql, signal) {
   // ზუსტად ისე, როგორც „საველე აზომვის" აპში (encodeURIComponent → %20, არა „+")
-  const url = PARCEL_WFS + "?service=WFS&version=2.0.0&request=GetFeature"
+  const url = base + "?service=WFS&version=2.0.0&request=GetFeature"
     + "&typeNames=" + PARCEL_LAYER + "&outputFormat=application/json"
     + "&srsName=EPSG:32638&count=5&CQL_FILTER=" + encodeURIComponent(cql);
   const res = await fetch(url, { signal, cache: "no-store" });

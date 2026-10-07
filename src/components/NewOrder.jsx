@@ -35,7 +35,7 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
       if (r.parcel.code) setCode(r.parcel.code);
       setFindMsg({ kind: "ok", text: `ნაკვეთი ნაპოვნია${r.parcel.area ? ` · ${m2(r.parcel.area)}` : ""}` });
     } else {
-      setFindMsg({ kind: "warn", text: findText[r.reason] || findText.blocked });
+      setFindMsg({ kind: "warn", text: findText[r.reason] || findText.blocked, detail: r.detail });
     }
   };
 
@@ -91,7 +91,19 @@ export default function NewOrder({ onClose, onPublish, busy, ownerId }) {
               {finding ? "იძებნება…" : "ძებნა"}
             </button>
           </form>
-          {findMsg && <div className={findMsg.kind} style={{ marginTop: 8, marginBottom: 0 }}>{findMsg.text}</div>}
+          {findMsg && (
+            <div className={findMsg.kind} style={{ marginTop: 8, marginBottom: 0 }}>
+              {findMsg.text}
+              {findMsg.detail && (
+                <details style={{ marginTop: 6 }}>
+                  <summary style={{ cursor: "pointer", fontSize: 11.5 }}>ტექნიკური დეტალები</summary>
+                  <div className="mono" style={{ fontSize: 10.5, marginTop: 4, wordBreak: "break-all" }}>
+                    {findMsg.detail.split(" | ").map((t, i) => <div key={i}>{t}</div>)}
+                  </div>
+                </details>
+              )}
+            </div>
+          )}
           {code.trim() && !codeOk ? (
             <div style={{ fontSize: 11.5, marginTop: 5, color: "var(--warn)" }}>
               ფორმატი: 01.72.14.031.045 (ბინისთვის: 01.72.14.031.045.01.500)

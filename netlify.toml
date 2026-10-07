@@ -14,10 +14,30 @@
 # ============================================================
 
 # საჯარო რეესტრის ნაკვეთების WFS (SLRWFS:LR_PARCELS_38) — კოდით ძებნისთვის.
-# ბრაუზერი nv.napr.gov.ge-ს პირდაპირ ვერ მიმართავს (CORS), ამიტომ Netlify-ით მივდივართ.
+# ბრაუზერი NAPR-ს პირდაპირ ვერ მიმართავს (CORS), ამიტომ Netlify-ით მივდივართ.
+# რომელი მისამართი პასუხობს, ზუსტად უცნობია — საიტი რიგრიგობით ცდის
+# (src/lib/napr.js → PARCEL_WFS_LIST) და მომუშავეს იმახსოვრებს.
 [[redirects]]
-  from = "/napr/wfs"
+  from = "/napr/wfs1"
   to = "https://nv.napr.gov.ge/geoserver/wfs"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/napr/wfs2"
+  to = "https://nv.napr.gov.ge/geoserver/SLRWFS/wfs"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/napr/wfs3"
+  to = "http://nv.napr.gov.ge/geoserver/wfs"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/napr/wfs4"
+  to = "http://nv.napr.gov.ge/geoserver/SLRWFS/wfs"
   status = 200
   force = true
 
