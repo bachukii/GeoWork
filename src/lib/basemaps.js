@@ -1,41 +1,9 @@
 import L from "leaflet";
 
-// ============================================================
-// რუკის ფენები
-//
-// NAPR-ის სერვისები http-ია, საიტი https — ამიტომ ტაილები
-// Netlify-ს proxy-ით მოდის (იხ. netlify.toml).
-// ლოკალურ dev-ზე proxy არ არსებობს, ამიტომ იქ პირდაპირ http-ს ვიყენებთ.
-// ============================================================
+// რუკის ფენები: OpenStreetMap, Esri-ის სატელიტი, საჯარო რეესტრის ორთოფოტო
+// და საკადასტრო ფენა (nv.napr.gov.ge / mp.napr.gov.ge — იგივე, რასაც „საველე აზომვა" იყენებს).
+// WMS-ის სურათებს ბრაუზერი პირდაპირ ტვირთავს — CORS მათზე არ მოქმედებს, proxy არ სჭირდება.
 
-const isDev = import.meta.env.DEV;
-const MP1 = isDev ? "http://mp1.napr.gov.ge" : "/napr-tiles";
-const GPV = isDev ? "http://gpv0.napr.gov.ge" : "/napr-wms";
-
-// WMTS-ის TileMatrix ორნიშნა ნულებიანია ("07", "18"),
-// Leaflet კი {z}-ს ნულების გარეშე აწვდის — ამიტომ getTileUrl-ს ვცვლით.
-const NaprWMTS = L.TileLayer.extend({
-  getTileUrl(coords) {
-    return L.Util.template(this._url, {
-      ...this.options,
-      z: String(coords.z).padStart(2, "0"),
-      x: coords.x,
-      y: coords.y,
-      s: this._getSubdomain(coords),
-    });
-  },
-});
-
-const orthoLayer = (name) =>
-  new NaprWMTS(`${MP1}/${name}/wmts/${name}/GLOBAL_MERCATOR/{z}/{x}/{y}.png`, {
-    maxZoom: 20, maxNativeZoom: 20, minZoom: 8,
-    attribution: "ორთოფოტო: საჯარო რეესტრი",
-  });
-
-// Google-ის რუკა — მხოლოდ გასაღებით.
-// mt.google.com-ის "უფასო" ტაილები Google-ის პირობებს არღვევს,
-// ამიტომ არ გამოგვიყენებია. ოფიციალური გზა API გასაღებს და
-// ბილინგის ჩართვას მოითხოვს.
 const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
 export const BASEMAPS = {
@@ -52,6 +20,14 @@ export const BASEMAPS = {
       { maxZoom: 19, attribution: "Esri" }
     ),
   },
+  ortho: {
+    label: "ორთოფოტო",
+    make: () => L.tileLayer.wms("https://mp.napr.gov.ge/WBR/service", {
+      layers: "WBR", format: "image/jpeg", transparent: false, version: "1.3.0",
+      maxZoom: 20, attribution: "ორთოფოტო: საჯარო რეესტრი",
+    }),
+    under: "sat",
+  },
   ...(GOOGLE_KEY ? {
     google: {
       label: "Google",
@@ -61,21 +37,11 @@ export const BASEMAPS = {
       ),
     },
   } : {}),
-  ortho: {
-    label: "ორთოფოტო",
-    // დაფარვა ნაწილობრივია — 2014 წ. დასავლეთ საქართველო.
-    // სხვა რეგიონებზე ცარიელი გამოვა; ამიტომ ქვეშ სატელიტი დევს.
-    make: () => orthoLayer("ORTHO_2014_DASAVLETI"),
-    partial: true,
-    under: "sat",
-  },
 };
 
-// საკადასტრო ნაკვეთების ფენა.
-// NAPR-ის GeoServer დახურულია ("Access Denied"), ამიტომ ჩაირთვება
-// მხოლოდ მაშინ, როცა .env-ში საკუთარ endpoint-ს მიუთითებ.
-export const cadastreWmsUrl = import.meta.env.VITE_NAPR_WMS || "https://gpv0.napr.gov.ge/geoserver/ParcelA/wms";
-export const cadastreLayer  = import.meta.env.VITE_NAPR_LAYER || "ParcelA:RegParcels";
+// საკადასტრო ფენა — ნაკვეთები და შენობები
+export const cadastreWmsUrl = import.meta.env.VITE_NAPR_WMS || "https://nv.napr.gov.ge/geoserver/wms";
+export const cadastreLayer  = import.meta.env.VITE_NAPR_LAYER || "NG_REG_LAYER";
 export const cadastreAvailable = Boolean(cadastreWmsUrl && cadastreLayer);
 
 export function cadastreOverlay() {
@@ -84,9 +50,10 @@ export function cadastreOverlay() {
     layers: cadastreLayer,
     format: "image/png",
     transparent: true,
-    version: "1.1.0",
+    version: "1.3.0",
     maxZoom: 20,
-    opacity: 0.85,
+    minZoom: 14,
+    opacity: 0.95,
     attribution: "საკადასტრო მონაცემები: საჯარო რეესტრი",
   });
 }

@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { polygonArea, centroid, naprPortalUrl } from "../lib/geo";
+import { polygonArea, centroid } from "../lib/geo";
 import { BASEMAPS, cadastreOverlay, cadastreAvailable } from "../lib/basemaps";
 import LayerSwitch from "./LayerSwitch";
-import { lookupByCode, identifyAt, codeFromProps, reasonText, isValidCode } from "../lib/napr";
 import { m2 } from "../lib/constants";
+import { parcelAt } from "../lib/napr";
 
 // ნაგულისხმევი ცენტრი — თბილისი
 const DEFAULT_CENTER = [41.7151, 44.8271];
@@ -34,8 +34,8 @@ export default function MapPicker({
   onChange,
   height = 300,
   readOnly = false,
-  code,                  // საკადასტრო კოდი — ავტომატური მონიშვნისთვის
-  onParcelFound,         // (parcel) => void — ფართობი/კოდი უკან
+  parcel,                // რეესტრიდან ნაპოვნი ნაკვეთი { outer, bbox }
+  onParcelPick,          // (parcel) => void — რუკაზე დაჭერით არჩეული ნაკვეთი
 }) {
   const boxRef = useRef(null);
   const mapRef = useRef(null);
@@ -43,7 +43,11 @@ export default function MapPicker({
   const polyRef = useRef(null);
   const vertexLayerRef = useRef(null);
 
-  const [mode, setMode] = useState("parcel"); // parcel | point | polygon
+  // საჯარო რეესტრის მონაცემთა სერვისი (gpv0.napr.gov.ge) დახურულია —
+  // ნაკვეთს ავტომატურად ვეღარ ვიღებთ. დამკვეთი ნიშნავს წერტილს ან ხაზავს კონტურს.
+  const [mode, setMode] = useState(value?.polygon?.length ? "polygon" : "parcel"); // parcel | point | polygon
+  const [picking, setPicking] = useState(false);
+  const [pickMsg, setPickMsg] = useState(null);
   const [base, setBase] = useState("sat");
   const [cadastre, setCadastre] = useState(cadastreAvailable);
   const baseRef = useRef(null);
@@ -54,9 +58,9 @@ export default function MapPicker({
     value?.lat ? [value.lat, value.lng] : null
   );
   const [locating, setLocating] = useState(false);
-  const [seeking, setSeeking] = useState(false);
-  const [note, setNote] = useState(null);   // {kind, text}
-  const parcelRef = useRef(null);
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState(null);   // null | [] | [{name, lat, lng}]
+  const [searching, setSearching] = useState(false);
 
   const area = polygonArea(pts);
 
@@ -107,8 +111,7 @@ export default function MapPicker({
     if (cadRef.current) { map.removeLayer(cadRef.current); cadRef.current = null; }
     if (cadastre) {
       const ov = cadastreOverlay();
-      if (ov) { cadRef.current = ov.addTo(map); }
-      cadRef.current.setZIndex(3);
+      if (ov) { cadRef.current = ov.addTo(map); cadRef.current.setZIndex(3); }
     }
   }, [cadastre]);
 
@@ -124,14 +127,24 @@ export default function MapPicker({
         setPts([]);
       } else if (mode === "polygon") {
         setPts((prev) => [...prev, p]);
-      } else if (mode === "parcel") {
-        setSeeking(true); setNote(null);
-        try {
-          const r = await identifyAt(map, e.latlng);
-          if (r.ok) applyParcel(r.parcel);
-          else setNote({ kind: "warn", text: reasonText[r.reason] || reasonText.blocked });
-        } catch { /* გაუქმებული */ }
-        setSeeking(false);
+      } else {
+        // ნაკვეთის არჩევა საჯარო რეესტრიდან
+        if (map.getZoom() < 15) { setPickMsg({ kind: "warn", text: "ჯერ რუკა მიუახლოვე ნაკვეთს, შემდეგ დააჭირე." }); return; }
+        setPicking(true); setPickMsg(null);
+        const r = await parcelAt(map, e.latlng).catch(() => ({ ok: false, reason: "blocked" }));
+        setPicking(false);
+        if (r.ok) {
+          setCenter(null);
+          setPts(r.parcel.outer);
+          setPickMsg({ kind: "ok", text: `ნაკვეთი არჩეულია${r.parcel.code ? ` · ${r.parcel.code}` : ""}${r.parcel.area ? ` · ${m2(r.parcel.area)}` : ""}` });
+          onParcelPick?.(r.parcel);
+        } else {
+          setPickMsg({
+            kind: "warn",
+            text: r.reason === "notfound" ? "ამ ადგილას ნაკვეთი ვერ მოიძებნა." : "რეესტრმა არ უპასუხა. მოხაზე ნაკვეთი ხელით („კონტურის დახაზვა“).",
+            detail: r.detail,
+          });
+        }
       }
     };
     map.on("click", onClick);
@@ -165,33 +178,14 @@ export default function MapPicker({
     }
   }, [pts, readOnly]);
 
-  // ---------- ნაკვეთის გამოყენება ----------
-  const applyParcel = useCallback((parcel) => {
-    const map = mapRef.current;
+  // ---------- რეესტრიდან ნაპოვნი ნაკვეთი ----------
+  useEffect(() => {
+    if (!parcel?.outer?.length) return;
+    setMode("polygon");
+    setCenter(null);
     setPts(parcel.outer);
-    setMode("parcel");
-    if (map) map.fitBounds(parcel.bbox, { padding: [26, 26] });
-    parcelRef.current = parcel;
-    const found = codeFromProps(parcel.props);
-    setNote({ kind: "ok", text: found ? `ნაკვეთი მონიშნულია — ${found}` : "ნაკვეთი მონიშნულია" });
-    onParcelFound?.({ ...parcel, code: found });
-  }, [onParcelFound]);
-
-  // ---------- კოდით ძებნა ----------
-  const seekCode = useCallback(async () => {
-    if (!code) return;
-    setSeeking(true); setNote(null);
-    try {
-      const r = await lookupByCode(code);
-      if (r.ok) applyParcel(r.parcel);
-      else setNote({
-        kind: "warn",
-        text: reasonText[r.reason] || reasonText.blocked,
-        tried: r.tried,
-      });
-    } catch { /* ignore */ }
-    setSeeking(false);
-  }, [code, applyParcel]);
+    mapRef.current?.fitBounds(parcel.bbox, { padding: [28, 28], maxZoom: 19 });
+  }, [parcel]);
 
   // ---------- ცვლილების ამოტანა ზემოთ ----------
   const emit = useCallback(() => {
@@ -207,6 +201,37 @@ export default function MapPicker({
   useEffect(() => { emit(); }, [emit]);
 
   // ---------- ჩემი ადგილმდებარეობა ----------
+  // ---------- ადგილის ძებნა (OpenStreetMap Nominatim) ----------
+  // მისამართი, სოფელი, ქუჩა ან კოორდინატები „41.71, 44.82"
+  const search = async (e) => {
+    e?.preventDefault();
+    const text = q.trim();
+    if (!text) return;
+    const coords = text.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/);
+    if (coords) {
+      goTo({ lat: +coords[1], lng: +coords[2], name: text });
+      return;
+    }
+    setSearching(true);
+    try {
+      const url = "https://nominatim.openstreetmap.org/search?" + new URLSearchParams({
+        q: text, format: "jsonv2", countrycodes: "ge", limit: "6", "accept-language": "ka",
+      });
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const data = res.ok ? await res.json() : [];
+      setHits(data.map((d) => ({ name: d.display_name, lat: +d.lat, lng: +d.lon })));
+    } catch {
+      setHits([]);
+    }
+    setSearching(false);
+  };
+
+  const goTo = (h) => {
+    setHits(null);
+    mapRef.current?.setView([h.lat, h.lng], 18);
+    if (mode === "point") { setCenter([h.lat, h.lng]); setPts([]); }
+  };
+
   const locate = () => {
     if (!navigator.geolocation) return;
     setLocating(true);
@@ -225,47 +250,37 @@ export default function MapPicker({
   return (
     <div>
       {!readOnly && (
-        <div className="grid2" style={{ marginBottom: 8 }}>
-          <button className={`chip ${mode === "point" ? "on" : ""}`}
-            onClick={() => setMode("point")}>წერტილი</button>
-          <button className={`chip ${mode === "polygon" ? "on" : ""}`}
-            onClick={() => setMode("polygon")}>ნაკვეთის კონტური</button>
-        </div>
-      )}
-
-      {!readOnly && (
         <>
-          <div className="grid3" style={{ gap: 6, marginBottom: 7 }}>
-            <button className={`chip chip-sm ${mode === "parcel" ? "on" : ""}`}
-              onClick={() => setMode("parcel")}>ნაკვეთის არჩევა</button>
-            <button className={`chip chip-sm ${mode === "point" ? "on" : ""}`}
+          <div className="grid3" style={{ gap: 8, marginBottom: 8 }}>
+            <button className={`chip ${mode === "parcel" ? "on" : ""}`}
+              onClick={() => { setMode("parcel"); setCadastre(true); }}>ნაკვეთის არჩევა</button>
+            <button className={`chip ${mode === "point" ? "on" : ""}`}
               onClick={() => setMode("point")}>წერტილი</button>
-            <button className={`chip chip-sm ${mode === "polygon" ? "on" : ""}`}
-              onClick={() => { setMode("polygon"); setPts([]); }}>ხელით დახაზვა</button>
+            <button className={`chip ${mode === "polygon" ? "on" : ""}`}
+              onClick={() => { setMode("polygon"); setCenter(null); setPts([]); }}>კონტურის დახაზვა</button>
           </div>
-
-          <button className="btn btn-go" style={{ width: "100%", marginBottom: 8 }}
-            disabled={seeking || !isValidCode(code)} onClick={seekCode}>
-            {seeking ? "იძებნება…" : "ძებნა კოდით"}
-          </button>
-          {code && !isValidCode(code) && (
-            <div className="muted" style={{ fontSize: 11.5, marginTop: -4, marginBottom: 8 }}>
-              ფორმატი: 01.72.14.031.045
+          <form className="mp-search" onSubmit={search}>
+            <input className="inp" value={q} onChange={(e) => setQ(e.target.value)}
+              placeholder="მოძებნე ადგილი: სოფელი, ქუჩა, მისამართი ან კოორდინატები" />
+            <button className="btn" type="submit" disabled={searching || !q.trim()}>
+              {searching ? "…" : "ძებნა"}
+            </button>
+          </form>
+          {hits && (
+            <div className="mp-hits">
+              {hits.length === 0
+                ? <div className="muted" style={{ padding: "10px 12px", fontSize: 13 }}>ვერაფერი მოიძებნა. სცადე სხვაგვარად ჩაწერა.</div>
+                : hits.map((h, i) => (
+                  <button key={i} type="button" className="mp-hit" onClick={() => goTo(h)}>{h.name}</button>
+                ))}
             </div>
           )}
-
           <LayerSwitch base={base} setBase={setBase} cadastre={cadastre} setCadastre={setCadastre} />
         </>
       )}
 
       <div ref={boxRef} style={{ height, zIndex: 1 }} />
 
-      {BASEMAPS[base].partial && (
-        <div className="warn" style={{ marginTop: 6 }}>
-          ორთოფოტოს დაფარვა ნაწილობრივია (2014, დასავლეთ საქართველო).
-          სხვა რეგიონში ქვედა ფენა ჩანს.
-        </div>
-      )}
 
       {!readOnly && (
         <>
@@ -273,16 +288,6 @@ export default function MapPicker({
             <button className="btn2 btn-sm" onClick={locate} disabled={locating}>
               {locating ? "…" : "ჩემი ადგილი"}
             </button>
-            {(center || pts.length >= 3) && (() => {
-              const c = pts.length >= 3 ? centroid(pts) : center;
-              return (
-                <a className="btn2 btn-sm" href={naprPortalUrl(c[0], c[1])}
-                  target="_blank" rel="noreferrer"
-                  style={{ textDecoration: "none", display: "inline-block" }}>
-                  maps.gov.ge-ზე გახსნა
-                </a>
-              );
-            })()}
             {mode === "polygon" && (
               <>
                 <button className="btn2 btn-sm" onClick={() => setPts((p) => p.slice(0, -1))}
@@ -293,15 +298,13 @@ export default function MapPicker({
             )}
           </div>
 
-          {note && (
-            <div className={note.kind === "ok" ? "ok" : "warn"} style={{ marginTop: 7 }}>
-              {note.text}
-              {note.tried?.length > 0 && (
+          {pickMsg && (
+            <div className={pickMsg.kind} style={{ marginTop: 8, marginBottom: 0 }}>
+              {pickMsg.text}
+              {pickMsg.detail && (
                 <details style={{ marginTop: 6 }}>
                   <summary style={{ cursor: "pointer", fontSize: 11.5 }}>ტექნიკური დეტალები</summary>
-                  <div className="mono" style={{ fontSize: 10.5, marginTop: 4, opacity: .85 }}>
-                    {note.tried.map((t, i) => <div key={i}>{t}</div>)}
-                  </div>
+                  <div className="mono" style={{ fontSize: 10.5, marginTop: 4 }}>{pickMsg.detail}</div>
                 </details>
               )}
             </div>
@@ -309,9 +312,10 @@ export default function MapPicker({
 
           <div className="card" style={{ marginTop: 8, fontSize: 12.5 }}>
             {mode === "parcel" ? (
-              pts.length >= 3
+              picking ? <span className="muted">საჯარო რეესტრს ვეკითხები…</span>
+              : pts.length >= 3
                 ? <>ნაკვეთი მონიშნულია · <b className="mono">≈ {m2(Math.round(area))}</b></>
-                : <span className="muted">დააჭირე ნაკვეთს რუკაზე — საზღვრები საჯარო რეესტრიდან ჩამოვა</span>
+                : <span className="muted">მიუახლოვე რუკა და დააჭირე ნაკვეთს — საზღვრები საჯარო რეესტრიდან ჩამოვა</span>
             ) : mode === "point" ? (
               center
                 ? <>მონიშნულია: <span className="mono">{center[0].toFixed(5)}, {center[1].toFixed(5)}</span></>
@@ -328,7 +332,6 @@ export default function MapPicker({
               ხელით მონიშნული ტერიტორია მიახლოებითია — საბოლოო ფართობს სპეციალისტი განსაზღვრავს.
             </div>
           )}
-          {seeking && <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>საჯარო რეესტრს ვეკითხები…</div>}
         </>
       )}
     </div>

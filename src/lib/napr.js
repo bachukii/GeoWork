@@ -1,3 +1,4 @@
+import { utm38ToLatLng } from "./geo";
 // ============================================================
 // საკადასტრო ნაკვეთის ძებნა კოდით
 //
@@ -34,7 +35,8 @@ const WMS_ENDPOINTS = [
   "/napr-wms/geoserver/ParcelA/wms",
 ].filter(Boolean);
 
-const CODE_RE = /^\d{2}\.\d{2}\.\d{2}\.\d{3}(\.\d{3})?$/;
+// ნაკვეთი: 01.72.14.031.045 (ან 4 ჯგუფით), ბინა/ფართი: …045.01.500
+const CODE_RE = /^\d{2}\.\d{2}\.\d{2}\.\d{3}(\.\d{3}(\.\d{2}\.\d{3})?)?$/;
 const CODE_LOOSE = /^\d{2}\.\d{2}\.\d{2}\.\d{3}/;
 export const isValidCode = (c) => CODE_RE.test(String(c || "").trim());
 
@@ -176,3 +178,132 @@ export const reasonText = {
   notfound: "ამ კოდით ნაკვეთი ვერ მოიძებნა. შეამოწმე კოდი.",
   blocked:  "საჯარო რეესტრის სერვისმა მოთხოვნა არ მიიღო. გახსენი maps.gov.ge, იპოვე ნაკვეთი კოდით და კონტური აქ ხელით მონიშნე.",
 };
+
+
+// ============================================================
+// ნაკვეთის ძებნა კოდით — nv.napr.gov.ge, ფენა SLRWFS:LR_PARCELS_38
+// (იგივე სერვისი, რომელსაც „საველე აზომვის" აპი იყენებს).
+// პასუხი UTM 38N-შია (EPSG:32638) — რუკისთვის WGS84-ში გადაგვყავს.
+// ============================================================
+
+// /napr/wfs → Netlify Function (netlify/functions/napr-wfs.mjs), რომელიც NAPR-ს პაროლით მიმართავს
+const PARCEL_WFS_LIST = [import.meta.env.VITE_NAPR_PARCEL_WFS || "/napr/wfs"];
+let workingWfs = null;
+const PARCEL_LAYER = "SLRWFS:LR_PARCELS_38";
+
+const cqlEsc = (s) => String(s).replace(/'/g, "''");
+
+// რიგრიგობით ვცდით proxy-ებს; პირველი მომუშავე იმახსოვრება
+async function parcelQuery(cql, signal) {
+  const order = workingWfs ? [workingWfs, ...PARCEL_WFS_LIST.filter((u) => u !== workingWfs)] : PARCEL_WFS_LIST;
+  const errors = [];
+  for (const base of order) {
+    try {
+      const feats = await parcelQueryAt(base, cql, signal);
+      workingWfs = base;
+      return feats;
+    } catch (e) {
+      if (e.name === "AbortError") throw e;
+      errors.push(`${base}: ${e.message}`);
+    }
+  }
+  throw new Error(errors.join(" | "));
+}
+
+async function parcelQueryAt(base, cql, signal) {
+  // ზუსტად ისე, როგორც „საველე აზომვის" აპში (encodeURIComponent → %20, არა „+")
+  const url = base + "?service=WFS&version=2.0.0&request=GetFeature"
+    + "&typeNames=" + PARCEL_LAYER + "&outputFormat=application/json"
+    + "&srsName=EPSG:32638&count=5&CQL_FILTER=" + encodeURIComponent(cql);
+  const res = await fetch(url, { signal, cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  if (!text.trim().startsWith("{")) throw new Error("სერვისმა JSON არ დააბრუნა");
+  const j = JSON.parse(text);
+  if (!Array.isArray(j.features)) throw new Error("პასუხში ნაკვეთები არ არის");
+  return j.features;
+}
+
+function toParcel(f) {
+  const g = f.geometry;
+  const polys = !g ? [] : g.type === "MultiPolygon" ? g.coordinates : g.type === "Polygon" ? [g.coordinates] : [];
+  const rings = polys.map((poly) => poly[0].map(([E, N]) => utm38ToLatLng(E, N)));
+  if (!rings.length) return null;
+  const p = f.properties || {};
+  return {
+    code: p.CADCODE || null,
+    area: p.SHAPE_AREA ? Math.round(Number(p.SHAPE_AREA)) : null,
+    rings, outer: rings[0], bbox: bboxOf(rings),
+  };
+}
+
+// { ok: true, parcel } | { ok: false, reason: "format" | "notfound" | "blocked", detail? }
+export async function findParcelByCode(rawCode, signal) {
+  const code = String(rawCode || "").trim().replace(/[,;\s]+/g, ".");
+  if (!CODE_LOOSE.test(code)) return { ok: false, reason: "format" };
+  try {
+    let feats = await parcelQuery(`CADCODE = '${cqlEsc(code)}'`, signal);
+    if (!feats.length) feats = await parcelQuery(`CADCODE LIKE '${cqlEsc(code)}%'`, signal);
+    const parcel = feats.map(toParcel).find(Boolean);
+    return parcel ? { ok: true, parcel } : { ok: false, reason: "notfound" };
+  } catch (e) {
+    if (e.name === "AbortError") throw e;
+    return { ok: false, reason: "blocked", detail: e.message };
+  }
+}
+
+export const findText = {
+  format: "კოდის ფორმატი არასწორია. მაგალითი: 01.72.14.031.045",
+  notfound: "ამ კოდით ნაკვეთი ვერ მოიძებნა. შეამოწმე კოდი.",
+  blocked: "საჯარო რეესტრის სერვისმა არ უპასუხა. სცადე მოგვიანებით ან მონიშნე ნაკვეთი რუკაზე ხელით.",
+};
+
+// ============================================================
+// ნაკვეთი რუკაზე დაჭერით — საკადასტრო WMS (NG_REG_LAYER) GetFeatureInfo,
+// /napr/cad proxy-ით (netlify.toml).
+// ============================================================
+const CAD_WMS = import.meta.env.VITE_NAPR_CAD_PROXY || "/napr/cad";
+const CAD_LAYER = import.meta.env.VITE_NAPR_LAYER || "NG_REG_LAYER";
+
+// [x, y] → [lat, lng]: UTM 38N მეტრებში ან გრადუსებში (lon, lat)
+const toLatLng = ([x, y]) => (Math.abs(x) > 1000 ? utm38ToLatLng(x, y) : [y, x]);
+
+function featureToParcel(f) {
+  const g = f.geometry;
+  const polys = !g ? [] : g.type === "MultiPolygon" ? g.coordinates : g.type === "Polygon" ? [g.coordinates] : [];
+  const rings = polys.map((poly) => poly[0].map(toLatLng));
+  if (!rings.length) return null;
+  const p = f.properties || {};
+  const code = p.CADCODE || p.cadcode || p.CAD_CODE || codeFromProps(p);
+  const area = p.SHAPE_AREA || p.AREA || p.area;
+  return { code: code || null, area: area ? Math.round(Number(area)) : null, rings, outer: rings[0], bbox: bboxOf(rings), props: p };
+}
+
+export async function parcelAt(map, latlng, signal) {
+  const size = map.getSize();
+  const b = map.getBounds();
+  const pt = map.latLngToContainerPoint(latlng);
+  const url = CAD_WMS + "?" + new URLSearchParams({
+    SERVICE: "WMS", VERSION: "1.1.1", REQUEST: "GetFeatureInfo",
+    LAYERS: CAD_LAYER, QUERY_LAYERS: CAD_LAYER, STYLES: "",
+    SRS: "EPSG:4326",
+    BBOX: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(","),
+    WIDTH: String(size.x), HEIGHT: String(size.y),
+    X: String(Math.round(pt.x)), Y: String(Math.round(pt.y)),
+    INFO_FORMAT: "application/json", FEATURE_COUNT: "10", FORMAT: "image/png",
+  });
+  try {
+    const res = await fetch(url, { signal, cache: "no-store" });
+    if (!res.ok) return { ok: false, reason: "blocked", detail: `HTTP ${res.status}` };
+    const text = await res.text();
+    if (!text.trim().startsWith("{")) return { ok: false, reason: "blocked", detail: "პასუხი JSON არ არის" };
+    const feats = JSON.parse(text).features || [];
+    const parcels = feats.map(featureToParcel).filter(Boolean);
+    // ჯერ ის, რომელსაც საკადასტრო კოდი აქვს (ნაკვეთი), მერე დანარჩენი (შენობა)
+    const parcel = parcels.find((x) => x.code) || parcels[0];
+    return parcel ? { ok: true, parcel } : { ok: false, reason: "notfound" };
+  } catch (e) {
+    if (e.name === "AbortError") throw e;
+    return { ok: false, reason: "blocked", detail: e.message };
+  }
+}

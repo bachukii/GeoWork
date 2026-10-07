@@ -6,6 +6,7 @@ import SurveyorView from "./views/SurveyorView";
 import AdminView from "./views/AdminView";
 import { Spinner } from "./components/UI";
 import Logo from "./components/Logo";
+import TriGrid from "./components/TriGrid";
 
 export const APP_VERSION = "v16";
 
@@ -38,7 +39,7 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
 
   if (loading) return <div className="app app-solo"><Spinner /></div>;
 
-  if (!session) return <div className="app app-solo"><AuthScreen /></div>;
+  if (!session) return <AuthScreen />;
 
   // ავტორიზებულია, მაგრამ პროფილი არ არსებობს
   // (ძველი ანგარიში, შექმნილი migration_v5-მდე, ან migration_v5 არ არის გაშვებული)
@@ -67,12 +68,23 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
   return (
     <div className="app">
       {toastMsg && <div className="toast">{toastMsg}</div>}
-      <div className="hdr">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-          <Logo size={24} light sub={roleLabel} />
-          <div className="who"><b>{profile.full_name}</b><span className="mono" style={{ fontSize: 10, opacity: .55 }}>v16</span></div>
+      <header className="hdr apphdr">
+        <a href="/" className="apphdr-logo" aria-label="საიტზე დაბრუნება"><Logo size={21} /></a>
+        <span className="apphdr-role">{roleLabel}</span>
+        <div className="apphdr-user">
+          <span className="apphdr-av" aria-hidden="true">{initials(profile.full_name)}</span>
+          <span className="apphdr-name">{profile.full_name}</span>
+          <button className="apphdr-out" onClick={signOut}>გასვლა</button>
         </div>
-      </div>
+      </header>
+      <section className="apphero">
+        <TriGrid />
+        <div className="apphero-in">
+          <div className="apphero-kicker">{roleLabel}</div>
+          <h1>გამარჯობა, {firstName(profile.full_name)}</h1>
+          <p>{HERO_TEXT[profile.role] || ""}</p>
+        </div>
+      </section>
       <div className="grid-band" />
 
       {profile.role === "client" && <ClientView toast={toast} />}
@@ -81,6 +93,17 @@ VITE_SUPABASE_ANON_KEY=eyJhbG...`}
     </div>
   );
 }
+
+const firstName = (name = "") => name.trim().split(/\s+/)[0] || "";
+
+const HERO_TEXT = {
+  client: "აქ განათავსებ შეკვეთებს, ადარებ ამზომველების ფასებს და იღებ ნახაზებს.",
+  surveyor: "აქ ნახავ ახალ შეკვეთებს შენს რეგიონში, დებ ფასს და მართავ სამუშაოებს.",
+  admin: "პლატფორმის მართვა: მომხმარებლები, შეკვეთები, გადახდები და საჩივრები.",
+};
+
+const initials = (name = "") =>
+  name.trim().split(/\s+/).slice(0, 2).map((w) => w[0] || "").join("").toUpperCase() || "?";
 
 export default function App() {
   return <AuthProvider><Shell /></AuthProvider>;

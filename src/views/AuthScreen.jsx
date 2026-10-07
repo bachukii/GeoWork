@@ -3,28 +3,45 @@ import Icon from "../components/Icon";
 import { useAuth } from "../context/AuthContext";
 import { REGIONS, ALL_SERVICES } from "../lib/constants";
 import Logo from "../components/Logo";
+import TriGrid from "../components/TriGrid";
+
+const MODES = ["login", "reg-client", "reg-surveyor"];
+const toSite = () => { window.location.href = "/"; };
+
+// /app?start=reg-client | reg-surveyor | login — საიტის ღილაკებიდან
+function startMode() {
+  const m = new URLSearchParams(window.location.search).get("start");
+  return MODES.includes(m) ? m : "login";
+}
 
 export default function AuthScreen() {
   const { signIn, signUp } = useAuth();
-  const [mode, setMode] = useState("landing"); // landing | login | reg-client | reg-surveyor
+  const [mode, setMode] = useState(startMode); // login | reg-client | reg-surveyor
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [info, setInfo] = useState("");
 
-  if (mode === "landing") return <Landing onPick={setMode} />;
   if (mode === "login")
-    return <Login onBack={() => setMode("landing")} busy={busy} err={err}
-      onSubmit={async (v) => {
-        setErr(""); setBusy(true);
-        try { await signIn(v); } catch (e) { setErr(translate(e)); } finally { setBusy(false); }
-      }} />;
+    return (
+      <AuthFrame onHome={toSite}>
+        <Login onBack={toSite} busy={busy} err={err}
+          onSwitch={(m) => { setErr(""); setMode(m); }}
+          onSubmit={async (v) => {
+            setErr(""); setBusy(true);
+            try { await signIn(v); } catch (e) { setErr(translate(e)); } finally { setBusy(false); }
+          }} />
+      </AuthFrame>
+    );
 
   const role = mode === "reg-client" ? "client" : "surveyor";
   return (
+    <AuthFrame onHome={toSite}>
     <Register
+      key={role}
       role={role}
       busy={busy} err={err} info={info}
-      onBack={() => { setErr(""); setInfo(""); setMode("landing"); }}
+      onBack={toSite}
+      onLogin={() => { setErr(""); setInfo(""); setMode("login"); }}
       onSubmit={async (payload) => {
         setErr(""); setInfo(""); setBusy(true);
         try {
@@ -35,6 +52,7 @@ export default function AuthScreen() {
         } catch (e) { setErr(translate(e)); } finally { setBusy(false); }
       }}
     />
+    </AuthFrame>
   );
 }
 
@@ -78,62 +96,44 @@ function translate(e) {
   return m;
 }
 
-// ---------------- LANDING ----------------
-function Landing({ onPick }) {
+// ---------------- შესვლის ფონის პანელი ----------------
+const TRUST = [
+  { icon: "lock", t: "დახურული ფასები", d: "დაცულია ბაზის დონეზე — არა მხოლოდ ინტერფეისში." },
+  { icon: "pin", t: "საჯარო რეესტრის რუკა", d: "საკადასტრო ნაკვეთი, ორთოფოტო და სატელიტი ერთ ეკრანზე." },
+  { icon: "check", t: "ვერიფიცირებული ამზომველები", d: "პროფილს ადმინისტრატორი ამოწმებს; შეფასებას მხოლოდ დამკვეთი წერს." },
+];
+
+// შესვლა / რეგისტრაცია: ფართო ეკრანზე ორი სვეტი
+function AuthFrame({ children, onHome }) {
   return (
-    <div>
-      <div className="gate-hero">
-        <div className="gate-wide">
-          <div>
-            <Logo size={30} light />
-            <h1 className="mark">ამზომველს ეძებ?<br /><span>დაელოდე ფასებს.</span></h1>
-            <p className="lede">
-              აქვეყნებ სამუშაოს. ამზომველები გიგზავნიან ფასს ერთმანეთისგან
-              დამოუკიდებლად — ვერავინ ხედავს ვინ რამდენი დაწერა. ირჩევ შენ.
-            </p>
-          </div>
+    <div className="af">
+      <aside className="af-side">
+        <TriGrid />
+        <button className="af-logo" onClick={onHome} aria-label="მთავარი გვერდი">
+          <Logo size={24} light />
+        </button>
+        <div className="af-copy">
+          <div className="lp-h1 af-h">ამზომველს ეძებ?<br /><span>დაელოდე ფასებს.</span></div>
+          <ul className="af-points">
+            {TRUST.map((x) => (
+              <li key={x.t}><Icon name={x.icon} size={16} /> {x.t}</li>
+            ))}
+          </ul>
         </div>
-      </div>
-      <div className="grid-band" />
-
-      <div style={{ padding: 18, maxWidth: 760, margin: "0 auto" }}>
-        <div className="roles col">
-          <div className="role-card">
-            <div className="glyph"><Icon name="ruler" size={26} /></div>
-            <h2>დამკვეთი ვარ</h2>
-            <p>მჭირდება საკადასტრო, ტოპოგრაფიული ან შიდა აზომვა.</p>
-            <button className="btn btn-go" onClick={() => onPick("reg-client")}>
-              შეკვეთის განთავსება
-            </button>
-          </div>
-
-          <div className="role-card">
-            <div className="glyph"><Icon name="ruler" size={26} /></div>
-            <h2>ამზომველი ვარ</h2>
-            <p>გეოდეზისტი ან კომპანია. ვიღებ შეკვეთებს ჩემს რეგიონში.</p>
-            <button className="btn" onClick={() => onPick("reg-surveyor")}>
-              ამზომველად რეგისტრაცია
-            </button>
-          </div>
-        </div>
-
-        <div className="hl" style={{ margin: "20px 0" }} />
-        <button className="btn2" onClick={() => onPick("login")}>შესვლა</button>
-
-        <div className="muted" style={{ fontSize: 11.5, textAlign: "center", marginTop: 22 }}>
-          GeoBid — GEOID-ის პროდუქტი
-        </div>
-      </div>
+      </aside>
+      <main className="af-main">
+        <div className="af-form">{children}</div>
+      </main>
     </div>
   );
 }
 
 // ---------------- LOGIN ----------------
-function Login({ onBack, onSubmit, busy, err }) {
+function Login({ onBack, onSubmit, onSwitch, busy, err }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   return (
-    <div style={{ padding: 20 }}>
+    <div>
       <button className="btn2 btn-sm" style={{ marginBottom: 18 }} onClick={onBack}>უკან</button>
       <div style={{ fontSize: 26, fontWeight: 900, marginBottom: 16, letterSpacing: "-0.02em" }}>შესვლა</div>
       {err && <div className="err">{err}</div>}
@@ -146,12 +146,17 @@ function Login({ onBack, onSubmit, busy, err }) {
         onClick={() => onSubmit({ email, password })}>
         {busy ? "შესვლა…" : "შესვლა"}
       </button>
+      <div className="muted" style={{ fontSize: 13, textAlign: "center", marginTop: 16 }}>
+        ანგარიში არ გაქვს? რეგისტრაცია როგორც{" "}
+        <button className="lp-link" onClick={() => onSwitch("reg-client")}>დამკვეთი</button> ან{" "}
+        <button className="lp-link" onClick={() => onSwitch("reg-surveyor")}>ამზომველი</button>
+      </div>
     </div>
   );
 }
 
 // ---------------- REGISTER ----------------
-function Register({ role, onBack, onSubmit, busy, err, info }) {
+function Register({ role, onBack, onLogin, onSubmit, busy, err, info }) {
   const isSurveyor = role === "surveyor";
   const [step, setStep] = useState(1);
   const steps = isSurveyor ? 3 : 1;
@@ -172,9 +177,9 @@ function Register({ role, onBack, onSubmit, busy, err, info }) {
   const canSubmit = isSurveyor ? (step1Valid && step2Valid) : step1Valid;
 
   return (
-    <div style={{ padding: 20 }}>
+    <div>
       <button className="btn2 btn-sm" style={{ marginBottom: 16 }} onClick={onBack}>უკან</button>
-      <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+      <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: "-0.02em", lineHeight: 1.15, whiteSpace: "pre-line" }}>
         {isSurveyor ? "ამზომველის\nრეგისტრაცია" : "დამკვეთის\nრეგისტრაცია"}
       </div>
       {isSurveyor && <div className="muted" style={{ fontSize: 12.5, marginBottom: 14 }}>ნაბიჯი {step} / {steps}</div>}
@@ -229,10 +234,6 @@ function Register({ role, onBack, onSubmit, busy, err, info }) {
             </>
           )}
 
-          <div className="warn" style={{ marginTop: 12 }}>
-            ტელეფონის SMS-დადასტურება ჯერ არ არის ჩართული — ავტორიზაცია ელფოსტით ხდება.
-            SMS-ის ჩასართავად Supabase-ში Twilio/MessageBird უნდა დაუკავშირდეს.
-          </div>
         </div>
       )}
 
@@ -286,6 +287,9 @@ function Register({ role, onBack, onSubmit, busy, err, info }) {
             {busy ? "მიმდინარეობს…" : "რეგისტრაცია"}
           </button>
         )}
+      </div>
+      <div className="muted" style={{ fontSize: 13, textAlign: "center", marginTop: 16 }}>
+        უკვე გაქვს ანგარიში? <button className="lp-link" onClick={onLogin}>შესვლა</button>
       </div>
     </div>
   );
