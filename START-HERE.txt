@@ -1,0 +1,48 @@
+﻿GeoBid — როგორ გავუშვა საიტი
+============================
+
+ეს საქაღალდე (D:\geobid) არის GeoBid-ის მთლიანი პროექტი.
+GitHub აღარ გჭირდება — საიტს პირდაპირ აქედან ტვირთავ Netlify-ზე.
+
+
+ერთხელ, პირველად
+----------------
+1. დააინსტალირე Node.js (LTS ვერსია): https://nodejs.org
+   (Next → Next → Finish. სხვა არაფერი შეცვალო.)
+
+2. Netlify-ში დარწმუნდი, რომ geobid საიტზე
+   Site configuration → Environment variables შეიცავს:
+     VITE_SUPABASE_URL        (უკვე არის)
+     VITE_SUPABASE_ANON_KEY   (უკვე არის)
+     NAPR_WFS_AUTH            მომხმარებელი:პაროლი — ნაკვეთის კოდით ძებნისთვის
+
+
+საიტის ატვირთვა (ყოველ ჯერზე, როცა რამე შეიცვლება)
+--------------------------------------------------
+ორჯერ დააჭირე:  deploy.bat
+
+პირველად:
+  • ბრაუზერი გაიხსნება — Netlify-ში დააჭირე „Authorize".
+  • შავ ფანჯარაში აირჩიე: "Use current git remote origin"-ის ნაცვლად
+    "Search by full or partial project name" → ჩაწერე geobid → Enter.
+შემდეგ ჯერზე პირდაპირ აიტვირთება.
+
+ბოლოს დაწერს "DONE" — საიტი განახლებულია.
+
+
+საიტის ნახვა საკუთარ კომპიუტერზე (ატვირთვამდე)
+-----------------------------------------------
+ორჯერ დააჭირე:  preview.bat  →  გახსენი http://localhost:8888
+
+
+⚠️ არ წაშალო
+------------
+• supabase\  — ბაზის მიგრაციები (Supabase → SQL Editor-ში გასაშვები)
+• netlify\functions\  — ნაკვეთის ძებნის სერვერული ნაწილი
+• netlify.toml — Netlify-ის პარამეტრები
+
+⚠️ Netlify-ზე ZIP-ის ან საქაღალდის ხელით გადათრევა (Drag & Drop) არ იმუშავებს:
+   საიტი ჯერ უნდა აიწყოს და ნაკვეთის ძებნის ფუნქცია მხოლოდ deploy.bat-ით აიტვირთება.
+
+GitHub-თან კავშირის გათიშვა (სურვილისამებრ):
+   Netlify → geobid → Site configuration → Build & deploy → Repository → Unlink.
